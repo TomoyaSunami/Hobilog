@@ -1,0 +1,288 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --bg: #f8fbff;
+  --ink: #10234a;
+  --muted: #6b7a99;
+  --line: #dde7f5;
+  --blue: #2f67ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .app-shell {
+    min-height: 100vh;
+    padding: 22px 16px calc(108px + env(safe-area-inset-bottom));
+  }
+
+  .screen {
+    width: min(100%, 430px);
+    margin: 0 auto;
+  }
+
+  .glass-card {
+    border: 1px solid rgba(221, 231, 245, 0.92);
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 18px 48px rgba(47, 103, 255, 0.1);
+    backdrop-filter: blur(18px);
+    border-radius: 20px;
+  }
+
+  .soft-control {
+    border: 1px solid rgba(221, 231, 245, 0.98);
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 10px 28px rgba(47, 103, 255, 0.08);
+    border-radius: 16px;
+  }
+
+  .icon-bubble {
+    display: inline-flex;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+  }
+
+  .primary-button {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 14px;
+    background: #2f67ff;
+    padding: 0 16px;
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 14px 32px rgba(47, 103, 255, 0.24);
+  }
+
+  .secondary-button {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(221, 231, 245, 0.98);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.78);
+    padding: 0 14px;
+    color: #10234a;
+    font-weight: 700;
+  }
+
+  .danger-button {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(240, 68, 104, 0.24);
+    border-radius: 14px;
+    background: rgba(240, 68, 104, 0.08);
+    padding: 0 14px;
+    color: #d92d52;
+    font-weight: 700;
+  }
+
+  .field {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid rgba(221, 231, 245, 0.98);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.86);
+    padding: 10px 12px;
+    color: #10234a;
+    outline: none;
+  }
+
+  .field:focus {
+    border-color: rgba(47, 103, 255, 0.54);
+    box-shadow: 0 0 0 4px rgba(47, 103, 255, 0.1);
+  }
+
+  .tabbar {
+    position: fixed;
+    right: 16px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    left: 16px;
+    z-index: 40;
+    margin: 0 auto;
+    max-width: 430px;
+    border: 1px solid rgba(221, 231, 245, 0.98);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 18px 52px rgba(16, 35, 74, 0.12);
+    backdrop-filter: blur(18px);
+  }
+}
+
+.heatmap-scroll {
+  display: flex;
+  justify-content: center;
+  max-height: 340px;
+  overflow: auto;
+  padding: 2px 8px;
+  scrollbar-color: rgba(107, 122, 153, 0.36) rgba(221, 231, 245, 0.42);
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.heatmap-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.heatmap-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(221, 231, 245, 0.42);
+}
+
+.heatmap-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(255, 255, 255, 0.84);
+  border-radius: 999px;
+  background: rgba(107, 122, 153, 0.42);
+  background-clip: padding-box;
+}
+
+.heatmap-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(47, 103, 255, 0.46);
+  background-clip: padding-box;
+}
+
+.icon-picker-scroll {
+  position: relative;
+  max-height: clamp(84px, calc(100dvh - 400px), 238px);
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-color: rgba(107, 122, 153, 0.36) rgba(221, 231, 245, 0.42);
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.icon-picker-scroll::after,
+.target-menu-scroll::after {
+  position: sticky;
+  bottom: 0;
+  display: block;
+  height: 22px;
+  margin-top: -22px;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.95));
+}
+
+.icon-picker-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.icon-picker-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(221, 231, 245, 0.42);
+}
+
+.icon-picker-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(255, 255, 255, 0.84);
+  border-radius: 999px;
+  background: rgba(107, 122, 153, 0.42);
+  background-clip: padding-box;
+}
+
+.icon-picker-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(47, 103, 255, 0.46);
+  background-clip: padding-box;
+}
+
+.target-menu-scroll {
+  max-height: clamp(160px, calc(100dvh - 260px), 312px);
+  background: #fff;
+  box-shadow: 0 22px 56px rgba(16, 35, 74, 0.18);
+  overflow-y: auto;
+  scrollbar-color: rgba(107, 122, 153, 0.36) rgba(221, 231, 245, 0.42);
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.target-menu-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.target-menu-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(221, 231, 245, 0.42);
+}
+
+.target-menu-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(255, 255, 255, 0.84);
+  border-radius: 999px;
+  background: rgba(107, 122, 153, 0.42);
+  background-clip: padding-box;
+}
+
+.target-menu-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(47, 103, 255, 0.46);
+  background-clip: padding-box;
+}
+
+.heatmap-year-grid {
+  display: grid;
+  grid-template-columns: 28px repeat(7, 10px);
+  gap: 4px;
+  align-items: center;
+}
+
+.heatmap-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.recharts-wrapper,
+.recharts-surface {
+  outline: none;
+}
