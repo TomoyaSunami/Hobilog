@@ -1,13 +1,18 @@
 import type { Metadata, Viewport } from "next";
+import { withBasePath } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "HobiLog",
   description: "Personal habit tracking PWA",
-  manifest: "/manifest.webmanifest",
+  manifest: withBasePath("/manifest.webmanifest"),
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg"
+    icon: [
+      { url: withBasePath("/icon.svg"), type: "image/svg+xml" },
+      { url: withBasePath("/icon-192.png"), sizes: "192x192", type: "image/png" },
+      { url: withBasePath("/icon-512.png"), sizes: "512x512", type: "image/png" }
+    ],
+    apple: withBasePath("/icon-192.png")
   }
 };
 
