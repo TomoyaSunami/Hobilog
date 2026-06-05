@@ -986,13 +986,7 @@ function ChartScreen({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-base font-black text-hobi-ink">{targetHabit.name}</span>
-              <span className="mt-0.5 flex items-center gap-2 text-xs font-bold text-hobi-muted">
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ background: COLOR_THEME[targetHabit.color].solid }}
-                />
-                {COLOR_THEME[targetHabit.color].label}
-              </span>
+              <span className="mt-1 block h-2.5 w-2.5 rounded-full" style={{ background: COLOR_THEME[targetHabit.color].solid }} />
             </span>
             <ChevronDown
               className={cx("text-hobi-muted transition", isTargetMenuOpen && "rotate-180 text-hobi-blue")}
@@ -1036,7 +1030,6 @@ function ChartScreen({
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-black text-hobi-ink">{habit.name}</span>
-                        <span className="block text-xs font-bold text-hobi-muted">{theme.label}</span>
                       </span>
                       {isActive ? <Check className="text-hobi-blue" size={18} /> : null}
                     </button>
@@ -1334,7 +1327,7 @@ function EmptyState({
 
 function BottomNav({ activeTab, setActiveTab }: { activeTab: TabId; setActiveTab: (tab: TabId) => void }) {
   return (
-    <nav className="tabbar px-3 py-2">
+    <nav className="tabbar">
       <div className="grid grid-cols-4 gap-1">
         {tabItems.map((item) => {
           const Icon = item.icon;
