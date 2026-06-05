@@ -1058,13 +1058,13 @@ function ChartScreen({
           <div className="heatmap-year-grid">
             <span />
             {["日", "月", "火", "水", "木", "金", "土"].map((label) => (
-              <span className="h-[10px] text-center text-[10px] font-bold leading-[10px] text-hobi-muted" key={label}>
+              <span className="heatmap-axis-label heatmap-day-label" key={label}>
                 {label}
               </span>
             ))}
             {heatmapRows.map((row, rowIndex) => (
               <div className="contents" key={`week-${rowIndex}`}>
-                <span className="h-[10px] text-[10px] font-bold leading-[10px] text-hobi-muted">{row.label}</span>
+                <span className="heatmap-axis-label">{row.label}</span>
                 {row.cells.map((cell, cellIndex) => (
                   <span
                     className="heatmap-cell"

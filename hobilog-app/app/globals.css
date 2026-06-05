@@ -167,7 +167,7 @@ button {
 .heatmap-scroll {
   display: flex;
   justify-content: center;
-  max-height: 340px;
+  max-height: 272px;
   overflow: auto;
   padding: 2px 8px;
   scrollbar-color: rgba(60, 60, 67, 0.3) rgba(60, 60, 67, 0.08);
@@ -273,15 +273,27 @@ button {
 
 .heatmap-year-grid {
   display: grid;
-  grid-template-columns: 28px repeat(7, 10px);
-  gap: 4px;
+  grid-template-columns: 36px repeat(7, 15px);
+  gap: 6px;
   align-items: center;
 }
 
+.heatmap-axis-label {
+  height: 15px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 15px;
+}
+
+.heatmap-day-label {
+  text-align: center;
+}
+
 .heatmap-cell {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
 }
 
 .calendar-grid {
