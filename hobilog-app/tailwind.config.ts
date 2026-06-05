@@ -6,30 +6,32 @@ const config: Config = {
     extend: {
       colors: {
         hobi: {
-          bg: "#F8FBFF",
-          card: "rgba(255,255,255,0.86)",
-          border: "#DDE7F5",
-          ink: "#10234A",
-          muted: "#6B7A99",
-          blue: "#2F67FF",
-          pink: "#F044B8",
-          cyan: "#25C3D8",
-          purple: "#8B5CF6",
-          amber: "#F4B63F"
+          bg: "#F2F2F7",
+          card: "rgba(255,255,255,0.92)",
+          border: "rgba(60,60,67,0.14)",
+          ink: "#1C1C1E",
+          muted: "#6E6E73",
+          blue: "#007AFF",
+          pink: "#FF2D55",
+          cyan: "#32ADE6",
+          purple: "#AF52DE",
+          amber: "#FF9500"
         }
       },
       boxShadow: {
-        glass: "0 18px 48px rgba(47, 103, 255, 0.10)",
-        control: "0 10px 28px rgba(47, 103, 255, 0.12)"
+        glass: "0 10px 30px rgba(0, 0, 0, 0.06)",
+        control: "0 8px 18px rgba(0, 122, 255, 0.18)"
       },
       fontFamily: {
         sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "SF Pro Display",
+          "SF Pro Text",
+          "Segoe UI",
           "Inter",
           "ui-sans-serif",
           "system-ui",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
           "sans-serif"
         ]
       }
