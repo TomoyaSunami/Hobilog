@@ -84,44 +84,44 @@ export const COLOR_THEME: Record<
 > = {
   Blue: {
     label: "ブルー",
-    text: "#007AFF",
-    soft: "rgba(0, 122, 255, 0.11)",
-    border: "rgba(0, 122, 255, 0.28)",
-    solid: "#007AFF"
+    text: "#2F67FF",
+    soft: "rgba(47, 103, 255, 0.12)",
+    border: "rgba(47, 103, 255, 0.32)",
+    solid: "#2F67FF"
   },
   Cyan: {
     label: "シアン",
-    text: "#32ADE6",
-    soft: "rgba(50, 173, 230, 0.12)",
-    border: "rgba(50, 173, 230, 0.3)",
-    solid: "#32ADE6"
+    text: "#25C3D8",
+    soft: "rgba(37, 195, 216, 0.13)",
+    border: "rgba(37, 195, 216, 0.34)",
+    solid: "#25C3D8"
   },
   Pink: {
     label: "ピンク",
-    text: "#FF2D55",
-    soft: "rgba(255, 45, 85, 0.11)",
-    border: "rgba(255, 45, 85, 0.28)",
-    solid: "#FF2D55"
+    text: "#F044B8",
+    soft: "rgba(240, 68, 184, 0.13)",
+    border: "rgba(240, 68, 184, 0.34)",
+    solid: "#F044B8"
   },
   Purple: {
     label: "パープル",
-    text: "#AF52DE",
-    soft: "rgba(175, 82, 222, 0.12)",
-    border: "rgba(175, 82, 222, 0.3)",
-    solid: "#AF52DE"
+    text: "#8B5CF6",
+    soft: "rgba(139, 92, 246, 0.13)",
+    border: "rgba(139, 92, 246, 0.34)",
+    solid: "#8B5CF6"
   },
   Green: {
     label: "グリーン",
-    text: "#34C759",
-    soft: "rgba(52, 199, 89, 0.12)",
-    border: "rgba(52, 199, 89, 0.3)",
-    solid: "#34C759"
+    text: "#22C55E",
+    soft: "rgba(34, 197, 94, 0.13)",
+    border: "rgba(34, 197, 94, 0.34)",
+    solid: "#22C55E"
   },
   Amber: {
     label: "アンバー",
-    text: "#FF9500",
-    soft: "rgba(255, 149, 0, 0.12)",
-    border: "rgba(255, 149, 0, 0.3)",
-    solid: "#FF9500"
+    text: "#F4B63F",
+    soft: "rgba(244, 182, 63, 0.14)",
+    border: "rgba(244, 182, 63, 0.34)",
+    solid: "#F4B63F"
   }
 };

@@ -614,17 +614,17 @@ function HomeScreen({
           <div>
             <p className="text-sm font-bold text-hobi-muted">今日の進捗</p>
             <p className="mt-1 text-sm font-semibold text-hobi-muted">{formatShortDate(todayKey)} {formatWeekday()}</p>
-            <p className="mt-2 text-3xl font-bold text-hobi-ink">
+            <p className="mt-2 text-3xl font-black text-hobi-ink">
               {todayDoneCount}
               <span className="text-base font-bold text-hobi-muted"> / {habits.length}</span>
             </p>
             <p className="mt-1 text-sm font-bold text-hobi-muted">{progressStatus}</p>
           </div>
-          <div className="icon-bubble bg-hobi-blue/10 text-hobi-blue">
+          <div className="icon-bubble bg-blue-50 text-hobi-blue">
             <ProgressIcon size={24} />
           </div>
         </div>
-        <div className="mt-4 h-3 overflow-hidden rounded-full bg-black/5">
+        <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
           <div className="h-full rounded-full bg-hobi-blue transition-all" style={{ width: `${progress}%` }} />
         </div>
       </div>
@@ -663,10 +663,10 @@ function HomeScreen({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <h2 className="min-w-0 truncate text-lg font-bold text-hobi-ink">{habit.name}</h2>
+                      <h2 className="min-w-0 truncate text-lg font-black text-hobi-ink">{habit.name}</h2>
                       {isDone ? (
                         <span
-                          className="inline-flex flex-none items-center gap-1 rounded-full bg-white px-2 py-1 text-xs font-bold"
+                          className="inline-flex flex-none items-center gap-1 rounded-full bg-white/80 px-2 py-1 text-xs font-black"
                           style={{ color: theme.text }}
                         >
                           <Check size={13} />
@@ -727,13 +727,13 @@ function LogScreen({
           <button className="secondary-button h-10 min-h-10 w-10 px-0" onClick={() => setLogMonth(addMonths(logMonth, -1))} type="button">
             <ChevronLeft size={18} />
           </button>
-          <h2 className="text-lg font-bold text-hobi-ink">{formatMonthTitle(logMonth)}</h2>
+          <h2 className="text-lg font-black text-hobi-ink">{formatMonthTitle(logMonth)}</h2>
           <button className="secondary-button h-10 min-h-10 w-10 px-0" onClick={() => setLogMonth(addMonths(logMonth, 1))} type="button">
             <ChevronRight size={18} />
           </button>
         </div>
 
-        <div className="calendar-grid mb-2 text-center text-xs font-bold text-hobi-muted">
+        <div className="calendar-grid mb-2 text-center text-xs font-black text-hobi-muted">
           {["日", "月", "火", "水", "木", "金", "土"].map((day) => (
             <div key={day}>{day}</div>
           ))}
@@ -749,9 +749,9 @@ function LogScreen({
             return (
               <button
                 className={cx(
-                  "min-h-[48px] rounded-lg border text-sm font-bold transition",
+                  "min-h-[48px] rounded-2xl border text-sm font-black transition",
                   isSelected
-                    ? "border-hobi-blue bg-hobi-blue/10 text-hobi-blue"
+                    ? "border-hobi-blue bg-blue-50 text-hobi-blue"
                     : "border-transparent bg-white/50 text-hobi-ink",
                   !isCurrentMonth && "opacity-40",
                   isFuture && "text-hobi-muted"
@@ -782,9 +782,9 @@ function LogScreen({
       ) : (
         <div className="glass-card p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-hobi-ink">{formatShortDate(selectedDate)}</h2>
+            <h2 className="text-lg font-black text-hobi-ink">{formatShortDate(selectedDate)}</h2>
             {isFutureDateKey(selectedDate, todayKey) ? (
-              <span className="rounded-full bg-black/5 px-3 py-1 text-xs font-bold text-hobi-muted">記録不可</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-hobi-muted">記録不可</span>
             ) : null}
           </div>
           <div className="space-y-3">
@@ -795,7 +795,7 @@ function LogScreen({
 
               return (
                 <button
-                  className="flex w-full items-center gap-3 rounded-lg border border-hobi-border bg-white p-3 text-left disabled:opacity-55"
+                  className="flex w-full items-center gap-3 rounded-2xl border border-hobi-border bg-white/60 p-3 text-left disabled:opacity-55"
                   disabled={isFuture}
                   key={habit.id}
                   onClick={() => openRecord(habit.id, selectedDate)}
@@ -805,7 +805,7 @@ function LogScreen({
                     <HabitIconView icon={habit.icon} size={20} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-hobi-ink">{habit.name}</p>
+                    <p className="truncate font-black text-hobi-ink">{habit.name}</p>
                     <p className="text-sm text-hobi-muted">
                       {record?.done ? `実施済み / ${record.durationMinutes} min` : "未実施"}
                     </p>
@@ -936,7 +936,7 @@ function ChartScreen({
     <label className="soft-control flex items-center gap-2 px-3 py-2">
       <CalendarDays className="text-hobi-blue" size={16} />
       <select
-        className="bg-transparent text-sm font-bold text-hobi-ink outline-none"
+        className="bg-transparent text-sm font-black text-hobi-ink outline-none"
         onChange={(event) => setSelectedYear(Number(event.target.value))}
         value={selectedYear}
       >
@@ -953,7 +953,7 @@ function ChartScreen({
     return (
       <section>
         <div className="glass-card p-6 text-center">
-          <p className="text-lg font-bold text-hobi-ink">分析する習慣がありません</p>
+          <p className="text-lg font-black text-hobi-ink">分析する習慣がありません</p>
           <p className="mt-2 text-sm font-semibold text-hobi-muted">習慣タブで習慣を追加すると分析を表示できます</p>
         </div>
       </section>
@@ -965,13 +965,13 @@ function ChartScreen({
       <div className={cx("glass-card relative mb-3 overflow-visible p-4", isTargetMenuOpen ? "z-50" : "z-10")}>
         <div className="relative">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-bold text-hobi-ink">対象習慣</h2>
+            <h2 className="text-xl font-black text-hobi-ink">対象習慣</h2>
             {yearControl}
           </div>
           <button
             aria-expanded={isTargetMenuOpen}
             aria-haspopup="listbox"
-            className="flex min-h-[58px] w-full items-center gap-3 rounded-lg border border-hobi-border bg-white px-3 py-2 text-left shadow-control transition hover:border-hobi-blue/30"
+            className="flex min-h-[58px] w-full items-center gap-3 rounded-2xl border border-hobi-border bg-white/80 px-3 py-2 text-left shadow-control transition hover:border-blue-200"
             onClick={() => setIsTargetMenuOpen((open) => !open)}
             type="button"
           >
@@ -985,7 +985,7 @@ function ChartScreen({
               <HabitIconView icon={targetHabit.icon} size={20} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-base font-bold text-hobi-ink">{targetHabit.name}</span>
+              <span className="block truncate text-base font-black text-hobi-ink">{targetHabit.name}</span>
               <span className="mt-0.5 flex items-center gap-2 text-xs font-bold text-hobi-muted">
                 <span
                   className="h-2.5 w-2.5 rounded-full"
@@ -1003,7 +1003,7 @@ function ChartScreen({
             {isTargetMenuOpen ? (
               <motion.div
                 animate={{ opacity: 1, y: 0 }}
-                className="target-menu-scroll absolute left-0 right-0 top-full z-[100] mt-2 rounded-lg border border-hobi-border bg-white p-2 shadow-glass"
+                className="target-menu-scroll absolute left-0 right-0 top-full z-[100] mt-2 rounded-2xl border border-hobi-border bg-white p-2 shadow-glass"
                 exit={{ opacity: 0, y: -6 }}
                 initial={{ opacity: 0, y: -6 }}
                 role="listbox"
@@ -1017,8 +1017,8 @@ function ChartScreen({
                     <button
                       aria-selected={isActive}
                       className={cx(
-                        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition",
-                        isActive ? "bg-hobi-blue/10" : "hover:bg-black/5"
+                        "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition",
+                        isActive ? "bg-blue-50" : "hover:bg-slate-50"
                       )}
                       key={habit.id}
                       onClick={() => {
@@ -1035,7 +1035,7 @@ function ChartScreen({
                         <HabitIconView icon={habit.icon} size={18} />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-bold text-hobi-ink">{habit.name}</span>
+                        <span className="block truncate text-sm font-black text-hobi-ink">{habit.name}</span>
                         <span className="block text-xs font-bold text-hobi-muted">{theme.label}</span>
                       </span>
                       {isActive ? <Check className="text-hobi-blue" size={18} /> : null}
@@ -1050,7 +1050,7 @@ function ChartScreen({
 
       <div className="glass-card mb-4 p-4">
         <div className="mb-4 flex items-center gap-3">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-hobi-ink">
+          <h2 className="flex items-center gap-2 text-lg font-black text-hobi-ink">
             年間ヒートマップ <Info size={17} className="text-hobi-muted" />
           </h2>
         </div>
@@ -1095,10 +1095,10 @@ function ChartScreen({
 
       <div className="glass-card mb-4 p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-hobi-ink">
+          <h2 className="flex items-center gap-2 text-lg font-black text-hobi-ink">
             累計実施日数の推移 <Info size={17} className="text-hobi-muted" />
           </h2>
-          <div className="rounded-full bg-black/5 p-1 text-sm font-bold">
+          <div className="rounded-full bg-slate-100 p-1 text-sm font-black">
             {(Object.keys(periodLabels) as AnalyticsPeriod[]).map((period) => (
               <button
                 className={cx(
@@ -1119,20 +1119,20 @@ function ChartScreen({
             <div className="h-[260px]">
               <ResponsiveContainer height="100%" width="100%">
                 <LineChart data={chartData} margin={{ bottom: 8, left: -18, right: 12, top: 8 }}>
-                  <CartesianGrid stroke="rgba(60, 60, 67, 0.14)" strokeDasharray="5 5" />
+                  <CartesianGrid stroke="#DDE7F5" strokeDasharray="5 5" />
                   <XAxis
                     dataKey="date"
                     minTickGap={26}
-                    stroke="#6E6E73"
+                    stroke="#6B7A99"
                     tickFormatter={(value) => String(value).slice(5).replace("-", "/")}
                     tickLine={false}
                   />
-                  <YAxis allowDecimals={false} stroke="#6E6E73" tickLine={false} />
+                  <YAxis allowDecimals={false} stroke="#6B7A99" tickLine={false} />
                   <Tooltip
                     contentStyle={{
-                      border: "1px solid rgba(60, 60, 67, 0.14)",
-                      borderRadius: 8,
-                      boxShadow: "0 14px 38px rgba(0, 0, 0, 0.12)"
+                      border: "1px solid #DDE7F5",
+                      borderRadius: 16,
+                      boxShadow: "0 18px 48px rgba(47, 103, 255, 0.14)"
                     }}
                     formatter={(value, name) => [`${value}日`, name]}
                     labelFormatter={(value) => formatShortDate(String(value))}
@@ -1148,7 +1148,7 @@ function ChartScreen({
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-3 flex flex-wrap justify-center gap-5 text-sm font-bold text-hobi-muted">
+            <div className="mt-3 flex flex-wrap justify-center gap-5 text-sm font-black text-hobi-muted">
               <span className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full" style={{ background: COLOR_THEME[targetHabit.color].solid }} />
                 {targetHabit.name}
@@ -1156,8 +1156,8 @@ function ChartScreen({
             </div>
           </>
         ) : (
-          <div className="rounded-lg border border-dashed border-hobi-border bg-white p-6 text-center">
-            <p className="text-lg font-bold text-hobi-ink">
+          <div className="rounded-2xl border border-dashed border-hobi-border bg-white/60 p-6 text-center">
+            <p className="text-lg font-black text-hobi-ink">
               {hasYearDoneRecords ? "この期間のデータはありません" : "この年のデータはありません"}
             </p>
             <p className="mt-2 text-sm font-semibold text-hobi-muted">対象期間に記録があると、ここに推移が表示されます</p>
@@ -1165,7 +1165,7 @@ function ChartScreen({
         )}
 
         <div className="mt-5 border-t border-hobi-border pt-4">
-          <h3 className="mb-4 text-lg font-bold text-hobi-ink">分析指標</h3>
+          <h3 className="mb-4 text-lg font-black text-hobi-ink">分析指標</h3>
           <div className="grid grid-cols-2 gap-3">
             {analyticsItems.map((item) => (
               <MetricTile key={item.label} {...item} />
@@ -1215,7 +1215,7 @@ function HabitsScreen({
                     <HabitIconView icon={habit.icon} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-lg font-bold text-hobi-ink">{habit.name}</h2>
+                    <h2 className="truncate text-lg font-black text-hobi-ink">{habit.name}</h2>
                     <p className="mt-1 text-sm font-bold" style={{ color: theme.text }}>
                       カラー: {theme.label}
                     </p>
@@ -1259,22 +1259,22 @@ type MetricTileProps = {
 
 function getMetricTheme(variant: MetricTileProps["variant"]) {
   if (variant === "cyan") {
-    return { color: "#32ADE6", background: "rgba(50, 173, 230, 0.12)" };
+    return { color: "#25C3D8", background: "rgba(37, 195, 216, 0.13)" };
   }
 
   if (variant === "purple") {
-    return { color: "#AF52DE", background: "rgba(175, 82, 222, 0.12)" };
+    return { color: "#8B5CF6", background: "rgba(139, 92, 246, 0.13)" };
   }
 
   if (variant === "amber") {
-    return { color: "#FF9500", background: "rgba(255, 149, 0, 0.12)" };
+    return { color: "#F4B63F", background: "rgba(244, 182, 63, 0.14)" };
   }
 
   if (variant === "pink") {
-    return { color: "#FF2D55", background: "rgba(255, 45, 85, 0.11)" };
+    return { color: "#F044B8", background: "rgba(240, 68, 184, 0.13)" };
   }
 
-  return { color: "#007AFF", background: "rgba(0, 122, 255, 0.11)" };
+  return { color: "#2F67FF", background: "rgba(47, 103, 255, 0.12)" };
 }
 
 function MetricTile({
@@ -1288,14 +1288,14 @@ function MetricTile({
   const { background, color } = getMetricTheme(variant);
 
   return (
-    <div className="rounded-lg border border-hobi-border bg-white p-3">
+    <div className="rounded-2xl border border-hobi-border bg-white/60 p-3">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-bold text-hobi-muted">{label}</p>
+        <p className="truncate text-sm font-black text-hobi-muted">{label}</p>
         <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full" style={{ background, color }}>
           {icon}
         </span>
       </div>
-      <p className="text-2xl font-bold leading-none text-hobi-ink">
+      <p className="text-2xl font-black leading-none text-hobi-ink">
         {value}
         <span className="ml-1 text-sm font-bold text-hobi-muted">{unit}</span>
       </p>
@@ -1319,10 +1319,10 @@ function EmptyState({
 }) {
   return (
     <div className="glass-card p-6 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-hobi-blue/10 text-hobi-blue">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-hobi-blue">
         {icon}
       </div>
-      <h2 className="mt-4 text-lg font-bold text-hobi-ink">{title}</h2>
+      <h2 className="mt-4 text-lg font-black text-hobi-ink">{title}</h2>
       <p className="mx-auto mt-2 max-w-[300px] text-sm font-semibold leading-6 text-hobi-muted">{description}</p>
       <button className="primary-button mt-5 w-full" onClick={onAction} type="button">
         <Plus size={18} />
@@ -1343,8 +1343,8 @@ function BottomNav({ activeTab, setActiveTab }: { activeTab: TabId; setActiveTab
           return (
             <button
               className={cx(
-                "relative flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-lg text-sm font-bold transition",
-                isActive ? "bg-hobi-blue/10 text-hobi-blue" : "text-hobi-muted"
+                "relative flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-2xl text-sm font-black transition",
+                isActive ? "text-hobi-blue" : "text-hobi-ink"
               )}
               key={item.id}
               onClick={() => setActiveTab(item.id)}
@@ -1388,7 +1388,7 @@ function RecordModal({
   if (!draft || !habit) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/25 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
+    <div className="fixed inset-0 z-50 flex items-end bg-slate-950/20 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
       <div className="glass-card w-full max-w-[430px] p-5">
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1400,7 +1400,7 @@ function RecordModal({
             </div>
             <div>
               <p className="text-sm font-bold text-hobi-muted">記録入力</p>
-              <h2 className="text-xl font-bold text-hobi-ink">{habit.name}</h2>
+              <h2 className="text-xl font-black text-hobi-ink">{habit.name}</h2>
             </div>
           </div>
           <button className="secondary-button h-10 min-h-10 w-10 px-0" onClick={onClose} type="button">
@@ -1410,7 +1410,7 @@ function RecordModal({
 
         <div className="space-y-4">
           <label className="block">
-            <span className="mb-2 block text-sm font-bold text-hobi-muted">日付</span>
+            <span className="mb-2 block text-sm font-black text-hobi-muted">日付</span>
             <input
               className="field"
               max={todayKey}
@@ -1431,8 +1431,8 @@ function RecordModal({
               value={draft.date}
             />
           </label>
-          <label className="flex items-center justify-between rounded-lg border border-hobi-border bg-white p-3">
-            <span className="font-bold text-hobi-ink">実施した</span>
+          <label className="flex items-center justify-between rounded-2xl border border-hobi-border bg-white/60 p-3">
+            <span className="font-black text-hobi-ink">実施した</span>
             <input
               checked={draft.done}
               className="h-6 w-6 accent-hobi-blue"
@@ -1441,7 +1441,7 @@ function RecordModal({
             />
           </label>
           <label className="block">
-            <span className="mb-2 block text-sm font-bold text-hobi-muted">作業時間 分</span>
+            <span className="mb-2 block text-sm font-black text-hobi-muted">作業時間 分</span>
             <input
               className="field"
               min={0}
@@ -1451,14 +1451,14 @@ function RecordModal({
             />
           </label>
           <label className="block">
-            <span className="mb-2 block text-sm font-bold text-hobi-muted">メモ</span>
+            <span className="mb-2 block text-sm font-black text-hobi-muted">メモ</span>
             <textarea
               className="field min-h-[92px] resize-none"
               onChange={(event) => setDraft({ ...draft, memo: event.target.value })}
               value={draft.memo}
             />
           </label>
-          {error ? <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-bold text-red-600">{error}</p> : null}
+          {error ? <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-black text-red-600">{error}</p> : null}
         </div>
 
         <div className="mt-5 flex gap-3">
@@ -1492,12 +1492,12 @@ function HabitFormModal({
   if (!form) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/25 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
+    <div className="fixed inset-0 z-50 flex items-end bg-slate-950/20 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
       <div className="glass-card max-h-[calc(100dvh-32px)] w-full max-w-[430px] p-5">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <p className="text-sm font-bold text-hobi-muted">習慣管理</p>
-            <h2 className="text-xl font-bold text-hobi-ink">{form.id ? "習慣を編集" : "新しい習慣を追加"}</h2>
+            <h2 className="text-xl font-black text-hobi-ink">{form.id ? "習慣を編集" : "新しい習慣を追加"}</h2>
           </div>
           <button className="secondary-button h-10 min-h-10 w-10 px-0" onClick={onClose} type="button">
             <X size={18} />
@@ -1506,7 +1506,7 @@ function HabitFormModal({
 
         <div className="space-y-4">
           <label className="block">
-            <span className="mb-2 block text-sm font-bold text-hobi-muted">習慣名</span>
+            <span className="mb-2 block text-sm font-black text-hobi-muted">習慣名</span>
             <input
               className="field"
               onChange={(event) => setForm({ ...form, name: event.target.value })}
@@ -1517,8 +1517,8 @@ function HabitFormModal({
 
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <span className="block text-sm font-bold text-hobi-muted">アイコン</span>
-              <span className="rounded-full bg-black/5 px-3 py-1 text-xs font-bold text-hobi-muted">
+              <span className="block text-sm font-black text-hobi-muted">アイコン</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-hobi-muted">
                 選択中: {habitIconLabels[form.icon]}
               </span>
             </div>
@@ -1529,8 +1529,8 @@ function HabitFormModal({
                     aria-label={habitIconLabels[icon]}
                     aria-pressed={form.icon === icon}
                     className={cx(
-                      "flex aspect-square items-center justify-center rounded-lg border text-hobi-muted transition",
-                      form.icon === icon ? "shadow-control" : "border-hobi-border bg-white hover:bg-white"
+                      "flex aspect-square items-center justify-center rounded-2xl border text-hobi-muted transition",
+                      form.icon === icon ? "shadow-control" : "border-hobi-border bg-white/60 hover:bg-white"
                     )}
                     key={icon}
                     onClick={() => setForm({ ...form, icon })}
@@ -1554,13 +1554,13 @@ function HabitFormModal({
           </div>
 
           <div>
-            <span className="mb-2 block text-sm font-bold text-hobi-muted">テーマカラー</span>
+            <span className="mb-2 block text-sm font-black text-hobi-muted">テーマカラー</span>
             <div className="grid grid-cols-3 gap-2">
               {COLOR_OPTIONS.map((color) => (
                 <button
                   className={cx(
-                    "flex items-center gap-2 rounded-lg border p-3 text-sm font-bold",
-                    form.color === color ? "border-hobi-blue bg-hobi-blue/10" : "border-hobi-border bg-white"
+                    "flex items-center gap-2 rounded-2xl border p-3 text-sm font-black",
+                    form.color === color ? "border-hobi-blue bg-blue-50" : "border-hobi-border bg-white/60"
                   )}
                   key={color}
                   onClick={() => setForm({ ...form, color })}
@@ -1600,31 +1600,31 @@ function DeleteHabitModal({
   const relatedRecordCount = records.filter((record) => record.habitId === habit.id).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/25 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
+    <div className="fixed inset-0 z-50 flex items-end bg-slate-950/20 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
       <div className="glass-card w-full max-w-[430px] p-5">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-bold text-hobi-muted">習慣削除</p>
-            <h2 className="mt-1 text-xl font-bold text-hobi-ink">この習慣を削除しますか？</h2>
+            <h2 className="mt-1 text-xl font-black text-hobi-ink">この習慣を削除しますか？</h2>
           </div>
           <button className="secondary-button h-10 min-h-10 w-10 px-0" onClick={onCancel} type="button">
             <X size={18} />
           </button>
         </div>
 
-        <div className="rounded-lg border border-hobi-border bg-white p-4">
+        <div className="rounded-2xl border border-hobi-border bg-white/70 p-4">
           <div className="flex items-center gap-3">
             <div className="icon-bubble h-12 w-12" style={{ background: theme.soft, color: theme.text }}>
               <HabitIconView icon={habit.icon} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-lg font-bold text-hobi-ink">{habit.name}</p>
+              <p className="truncate text-lg font-black text-hobi-ink">{habit.name}</p>
               <p className="mt-1 text-sm font-bold text-hobi-muted">関連記録 {relatedRecordCount} 件</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+        <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
           この習慣に紐づく記録もすべて削除されます。この操作は元に戻せません。
         </div>
 
@@ -1644,7 +1644,7 @@ function DeleteHabitModal({
 
 function getHeatmapColor(value: number, isInYear: boolean, habit: Habit): string {
   if (!isInYear) return "transparent";
-  if (value <= 0) return "#E5E5EA";
+  if (value <= 0) return "#EEF2F8";
 
   return COLOR_THEME[habit.color].solid;
 }
