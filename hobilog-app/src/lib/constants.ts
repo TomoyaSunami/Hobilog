@@ -16,9 +16,9 @@ export const DEFAULT_HABITS: Habit[] = [
     updatedAt: initialTimestamp
   },
   {
-    id: "habit-illustration",
-    name: "イラスト練習",
-    icon: "Palette",
+    id: "habit-reading",
+    name: "読書",
+    icon: "BookMarked",
     color: "Pink",
     createdAt: initialTimestamp,
     updatedAt: initialTimestamp
@@ -70,7 +70,7 @@ export const ICON_OPTIONS: HabitIcon[] = [
   "Smile"
 ];
 
-export const COLOR_OPTIONS: HabitColor[] = ["Blue", "Cyan", "Pink", "Purple", "Green", "Amber"];
+export const COLOR_OPTIONS: HabitColor[] = ["Blue", "Cyan", "Pink", "Purple", "Green", "Amber", "Red", "Orange", "Slate"];
 
 export const COLOR_THEME: Record<
   HabitColor,
@@ -118,10 +118,31 @@ export const COLOR_THEME: Record<
     solid: "#22C55E"
   },
   Amber: {
-    label: "アンバー",
-    text: "#F4B63F",
-    soft: "rgba(244, 182, 63, 0.14)",
-    border: "rgba(244, 182, 63, 0.34)",
-    solid: "#F4B63F"
+    label: "イエロー",
+    text: "#FFDD00",
+    soft: "#FFFBE0",
+    border: "rgba(255, 221, 0, 0.46)",
+    solid: "#FFDD00"
+  },
+  Red: {
+    label: "レッド",
+    text: "#EF4444",
+    soft: "rgba(239, 68, 68, 0.13)",
+    border: "rgba(239, 68, 68, 0.34)",
+    solid: "#EF4444"
+  },
+  Orange: {
+    label: "オレンジ",
+    text: "#F97316",
+    soft: "rgba(249, 115, 22, 0.13)",
+    border: "rgba(249, 115, 22, 0.34)",
+    solid: "#F97316"
+  },
+  Slate: {
+    label: "グレー",
+    text: "#64748B",
+    soft: "rgba(100, 116, 139, 0.14)",
+    border: "rgba(100, 116, 139, 0.34)",
+    solid: "#64748B"
   }
 };

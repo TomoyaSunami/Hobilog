@@ -30,7 +30,7 @@ export type HabitIcon =
   | "Trophy"
   | "Smile";
 
-export type HabitColor = "Blue" | "Cyan" | "Pink" | "Purple" | "Green" | "Amber";
+export type HabitColor = "Blue" | "Cyan" | "Pink" | "Purple" | "Green" | "Amber" | "Red" | "Orange" | "Slate";
 
 export type AnalyticsPeriod = "1m" | "3m" | "6m" | "1y";
 

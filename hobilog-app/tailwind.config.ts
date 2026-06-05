@@ -15,7 +15,7 @@ const config: Config = {
           pink: "#F044B8",
           cyan: "#25C3D8",
           purple: "#8B5CF6",
-          amber: "#F4B63F"
+          amber: "#FFDD00"
         }
       },
       boxShadow: {

@@ -603,7 +603,6 @@ function HomeScreen({
 }) {
   const progress = habits.length ? Math.round((todayDoneCount / habits.length) * 100) : 0;
   const isComplete = habits.length > 0 && todayDoneCount === habits.length;
-  const ProgressIcon = isComplete ? Check : Clock;
   const progressStatus = todayDoneCount === 0 ? "未実施" : isComplete ? "完了" : "進行中";
 
   return (
@@ -619,9 +618,11 @@ function HomeScreen({
             </p>
             <p className="mt-1 text-sm font-bold text-hobi-muted">{progressStatus}</p>
           </div>
-          <div className="icon-bubble bg-blue-50 text-hobi-blue">
-            <ProgressIcon size={24} />
-          </div>
+          {isComplete ? (
+            <div className="icon-bubble bg-blue-50 text-hobi-blue">
+              <Check size={24} />
+            </div>
+          ) : null}
         </div>
         <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
           <div className="h-full rounded-full bg-hobi-blue transition-all" style={{ width: `${progress}%` }} />
@@ -1261,7 +1262,7 @@ function getMetricTheme(variant: MetricTileProps["variant"]) {
   }
 
   if (variant === "amber") {
-    return { color: "#F4B63F", background: "rgba(244, 182, 63, 0.14)" };
+    return { color: "#B89B00", background: "rgba(255, 221, 0, 0.2)" };
   }
 
   if (variant === "pink") {
@@ -1384,8 +1385,8 @@ function RecordModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-slate-950/20 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
       <div className="glass-card w-full max-w-[430px] p-5">
-        <div className="mb-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div
               className="icon-bubble h-12 w-12"
               style={{ background: COLOR_THEME[habit.color].soft, color: COLOR_THEME[habit.color].text }}
@@ -1394,7 +1395,7 @@ function RecordModal({
             </div>
             <div className="min-w-0">
               <p className="whitespace-nowrap text-sm font-bold text-hobi-muted">記録入力</p>
-              <h2 className="text-xl font-black text-hobi-ink">{habit.name}</h2>
+              <h2 className="truncate whitespace-nowrap text-xl font-black text-hobi-ink">{habit.name}</h2>
             </div>
           </div>
           <button className="secondary-button h-10 min-h-10 w-10 px-0" onClick={onClose} type="button">
@@ -1533,7 +1534,7 @@ function HabitFormModal({
                         ? {
                             background: COLOR_THEME[form.color].soft,
                             borderColor: COLOR_THEME[form.color].border,
-                            color: COLOR_THEME[form.color].text
+                            color: COLOR_THEME[form.color].solid
                           }
                         : undefined
                     }
