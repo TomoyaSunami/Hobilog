@@ -83,7 +83,6 @@ import {
   getAllStreaks,
   getAnalyticsRange,
   getAvailableYears,
-  getDoneHabitCountForDate,
   getSummaryStats
 } from "@/lib/analytics";
 import type { AnalyticsPeriod, Habit, HabitColor, HabitIcon, HabitRecord, TabId } from "@/types";
@@ -743,7 +742,13 @@ function LogScreen({
             const dateKey = toDateKey(day);
             const isCurrentMonth = day.getMonth() === logMonth.getMonth();
             const isSelected = selectedDate === dateKey;
-            const doneCount = getDoneHabitCountForDate(records, dateKey);
+            const doneHabitDots = records
+              .filter((record) => record.date === dateKey && record.done)
+              .slice(0, 3)
+              .map((record) => {
+                const habit = habits.find((item) => item.id === record.habitId);
+                return habit ? COLOR_THEME[habit.color].solid : COLOR_THEME.Blue.solid;
+              });
             const isFuture = isFutureDateKey(dateKey, todayKey);
 
             return (
@@ -762,8 +767,8 @@ function LogScreen({
               >
                 <span>{day.getDate()}</span>
                 <span className="mt-1 flex justify-center gap-1">
-                  {Array.from({ length: Math.min(doneCount, 3) }).map((_, index) => (
-                    <span className="h-1.5 w-1.5 rounded-full bg-hobi-blue" key={index} />
+                  {doneHabitDots.map((color, index) => (
+                    <span className="h-1.5 w-1.5 rounded-full" key={`${dateKey}-${index}`} style={{ background: color }} />
                   ))}
                 </span>
               </button>
@@ -986,7 +991,6 @@ function ChartScreen({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-base font-black text-hobi-ink">{targetHabit.name}</span>
-              <span className="mt-1 block h-2.5 w-2.5 rounded-full" style={{ background: COLOR_THEME[targetHabit.color].solid }} />
             </span>
             <ChevronDown
               className={cx("text-hobi-muted transition", isTargetMenuOpen && "rotate-180 text-hobi-blue")}
@@ -1209,9 +1213,6 @@ function HabitsScreen({
                   </div>
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate text-lg font-black text-hobi-ink">{habit.name}</h2>
-                    <p className="mt-1 text-sm font-bold" style={{ color: theme.text }}>
-                      カラー: {theme.label}
-                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -1391,8 +1392,8 @@ function RecordModal({
             >
               <HabitIconView icon={habit.icon} />
             </div>
-            <div>
-              <p className="text-sm font-bold text-hobi-muted">記録入力</p>
+            <div className="min-w-0">
+              <p className="whitespace-nowrap text-sm font-bold text-hobi-muted">記録入力</p>
               <h2 className="text-xl font-black text-hobi-ink">{habit.name}</h2>
             </div>
           </div>
@@ -1402,10 +1403,10 @@ function RecordModal({
         </div>
 
         <div className="space-y-4">
-          <label className="block">
+          <label className="block min-w-0">
             <span className="mb-2 block text-sm font-black text-hobi-muted">日付</span>
             <input
-              className="field"
+              className="field date-field"
               max={todayKey}
               onChange={(event) => {
                 const nextDate = event.target.value;

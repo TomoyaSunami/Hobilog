@@ -143,6 +143,22 @@ button {
     box-shadow: 0 0 0 4px rgba(47, 103, 255, 0.1);
   }
 
+  .date-field {
+    -webkit-appearance: none;
+    appearance: none;
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow: hidden;
+  }
+
+  .date-field::-webkit-date-and-time-value {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+    text-align: center;
+  }
+
   .tabbar {
     position: fixed;
     right: 0;
