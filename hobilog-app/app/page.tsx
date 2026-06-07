@@ -1138,6 +1138,7 @@ function ChartScreen({
                   <Line
                     dataKey="value"
                     dot={false}
+                    isAnimationActive={false}
                     name={targetHabit.name}
                     stroke={COLOR_THEME[targetHabit.color].solid}
                     strokeWidth={3}
@@ -1439,8 +1440,11 @@ function RecordModal({
             <span className="mb-2 block text-sm font-black text-hobi-muted">作業時間 分</span>
             <input
               className="field"
+              enterKeyHint="done"
+              inputMode="numeric"
               min={0}
               onChange={(event) => setDraft({ ...draft, durationMinutes: Math.max(0, Number(event.target.value) || 0) })}
+              onFocus={(event) => event.target.select()}
               type="number"
               value={draft.durationMinutes}
             />
