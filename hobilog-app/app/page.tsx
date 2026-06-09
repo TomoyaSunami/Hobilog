@@ -65,6 +65,8 @@ import {
   DEFAULT_SETTINGS,
   HABIT_STORAGE_KEY,
   ICON_OPTIONS,
+  RECORD_METHOD_META,
+  RECORD_METHOD_OPTIONS,
   RECORD_STORAGE_KEY,
   SETTINGS_STORAGE_KEY
 } from "@/lib/constants";
@@ -85,7 +87,7 @@ import {
   getAvailableYears,
   getSummaryStats
 } from "@/lib/analytics";
-import type { AnalyticsPeriod, Habit, HabitColor, HabitIcon, HabitRecord, TabId } from "@/types";
+import type { AnalyticsPeriod, Habit, HabitColor, HabitIcon, HabitRecord, RecordMethod, TabId } from "@/types";
 
 type InlineIconProps = {
   "aria-hidden"?: boolean | "true" | "false";
@@ -233,7 +235,7 @@ type RecordDraft = {
   habitId: string;
   date: string;
   done: boolean;
-  durationMinutes: number;
+  quantity: number;
   memo: string;
 };
 
@@ -242,6 +244,8 @@ type HabitFormState = {
   name: string;
   icon: HabitIcon;
   color: HabitColor;
+  recordMethod: RecordMethod;
+  customUnit: string;
 };
 
 function cx(...classes: Array<string | false | null | undefined>): string {
@@ -258,10 +262,84 @@ function safeParse<T>(value: string | null, fallback: T): T {
   }
 }
 
+function isRecordMethod(method: unknown): method is RecordMethod {
+  return typeof method === "string" && (RECORD_METHOD_OPTIONS as string[]).includes(method);
+}
+
+function inferRecordMethod(habit: Habit): RecordMethod {
+  if (isRecordMethod(habit.recordMethod)) {
+    return habit.recordMethod;
+  }
+
+  const key = `${habit.id} ${habit.name}`;
+  if (key.includes("strength") || key.includes("筋トレ") || key.includes("スクワット")) return "count";
+  if (key.includes("reading") || key.includes("読書")) return "pages";
+  if (key.includes("study") || key.includes("勉強")) return "time";
+  if (key.includes("running") || key.includes("ランニング") || key.includes("ジョギング")) return "distance";
+
+  return "time";
+}
+
+function normalizeCustomUnit(unit: unknown): string {
+  if (typeof unit !== "string") return "";
+  return unit.trim().slice(0, 12);
+}
+
 function normalizeHabitIcon(icon: unknown): HabitIcon {
   if (typeof icon !== "string") return "Dumbbell";
   if ((ICON_OPTIONS as string[]).includes(icon)) return icon as HabitIcon;
   return "Dumbbell";
+}
+
+function normalizeHabit(habit: Habit): Habit {
+  return {
+    ...habit,
+    icon: normalizeHabitIcon(habit.icon),
+    recordMethod: inferRecordMethod(habit),
+    customUnit: normalizeCustomUnit(habit.customUnit)
+  };
+}
+
+function normalizeRecord(record: HabitRecord): HabitRecord {
+  const rawQuantity = Number(record.quantity ?? record.durationMinutes ?? 0);
+  const quantity = Number.isFinite(rawQuantity) ? Math.max(0, rawQuantity) : 0;
+
+  return {
+    ...record,
+    done: Boolean(record.done),
+    quantity
+  };
+}
+
+function getHabitUnit(habit: Habit): string {
+  if (habit.recordMethod === "custom") {
+    return habit.customUnit?.trim() || "単位";
+  }
+
+  return RECORD_METHOD_META[habit.recordMethod].unit;
+}
+
+function formatRecordValue(habit: Habit, record: HabitRecord | RecordDraft | null | undefined): string {
+  if (!record?.done) return "未実施";
+
+  if (habit.recordMethod === "done") {
+    return "実施済み";
+  }
+
+  const quantity = Math.max(0, Number(record.quantity) || 0);
+  const value = Number.isInteger(quantity) ? String(quantity) : quantity.toFixed(1);
+  return `${value}${getHabitUnit(habit)}`;
+}
+
+function normalizeQuantityForMethod(method: RecordMethod, value: unknown): number {
+  const numberValue = Number(value);
+  const normalized = Math.max(0, Number.isFinite(numberValue) ? numberValue : 0);
+
+  if (method === "distance" || method === "custom") {
+    return Math.round(normalized * 10) / 10;
+  }
+
+  return Math.trunc(normalized);
 }
 
 function makeId(prefix: string): string {
@@ -305,8 +383,8 @@ export default function HobiLogApp() {
     const storedSettings = safeParse(localStorage.getItem(SETTINGS_STORAGE_KEY), DEFAULT_SETTINGS);
     const parsedHabits = storedHabits ? safeParse<Habit[]>(storedHabits, DEFAULT_HABITS) : DEFAULT_HABITS;
 
-    setHabits(parsedHabits.map((habit) => ({ ...habit, icon: normalizeHabitIcon(habit.icon) })));
-    setRecords(safeParse<HabitRecord[]>(storedRecords, []));
+    setHabits(parsedHabits.map((habit) => normalizeHabit(habit)));
+    setRecords(safeParse<HabitRecord[]>(storedRecords, []).map((record) => normalizeRecord(record)));
     setActiveTab(storedSettings.activeTab ?? DEFAULT_SETTINGS.activeTab);
     setAnalyticsTarget(storedSettings.selectedAnalyticsHabitId ?? DEFAULT_HABITS[0]?.id ?? "");
     setSelectedYear(storedSettings.selectedAnalyticsYear ?? new Date().getFullYear());
@@ -373,7 +451,7 @@ export default function HobiLogApp() {
       habitId,
       date,
       done: existing?.done ?? true,
-      durationMinutes: existing?.durationMinutes ?? 0,
+      quantity: existing?.quantity ?? existing?.durationMinutes ?? 0,
       memo: existing?.memo ?? ""
     });
     setRecordError(null);
@@ -388,13 +466,17 @@ export default function HobiLogApp() {
     }
 
     const updatedAt = new Date().toISOString();
-    const normalizedDuration = Math.max(0, Math.trunc(Number(recordDraft.durationMinutes) || 0));
+    const habit = habits.find((item) => item.id === recordDraft.habitId);
+    const normalizedQuantity =
+      habit?.recordMethod === "done"
+        ? 0
+        : normalizeQuantityForMethod(habit?.recordMethod ?? "time", recordDraft.quantity);
     const nextRecord: HabitRecord = {
       id: `${recordDraft.habitId}-${recordDraft.date}`,
       habitId: recordDraft.habitId,
       date: recordDraft.date,
       done: recordDraft.done,
-      durationMinutes: normalizedDuration,
+      quantity: normalizedQuantity,
       memo: recordDraft.memo.trim(),
       updatedAt
     };
@@ -425,13 +507,17 @@ export default function HobiLogApp() {
             id: habit.id,
             name: habit.name,
             icon: habit.icon,
-            color: habit.color
+            color: habit.color,
+            recordMethod: habit.recordMethod,
+            customUnit: habit.customUnit ?? ""
           }
         : {
             id: null,
             name: "",
             icon: "Dumbbell",
-            color: "Blue"
+            color: "Blue",
+            recordMethod: "done",
+            customUnit: ""
           }
     );
   }
@@ -440,6 +526,7 @@ export default function HobiLogApp() {
     if (!habitForm) return;
     const name = habitForm.name.trim();
     if (!name) return;
+    if (habitForm.recordMethod === "custom" && !habitForm.customUnit.trim()) return;
 
     const updatedAt = new Date().toISOString();
 
@@ -452,6 +539,8 @@ export default function HobiLogApp() {
                 name,
                 icon: habitForm.icon,
                 color: habitForm.color,
+                recordMethod: habitForm.recordMethod,
+                customUnit: habitForm.recordMethod === "custom" ? normalizeCustomUnit(habitForm.customUnit) : "",
                 updatedAt
               }
             : habit
@@ -465,6 +554,8 @@ export default function HobiLogApp() {
           name,
           icon: habitForm.icon,
           color: habitForm.color,
+          recordMethod: habitForm.recordMethod,
+          customUnit: habitForm.recordMethod === "custom" ? normalizeCustomUnit(habitForm.customUnit) : "",
           createdAt: updatedAt,
           updatedAt
         }
@@ -674,9 +765,11 @@ function HomeScreen({
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-1 text-sm font-semibold text-hobi-muted">連続 {streak?.current ?? 0} 日</p>
+                    <p className="mt-1 text-sm font-semibold text-hobi-muted">
+                      {RECORD_METHOD_META[habit.recordMethod].label} / 連続 {streak?.current ?? 0} 日
+                    </p>
                     <p className="mt-1 text-sm text-hobi-muted">
-                      今日: {isDone ? `${todayRecord?.durationMinutes ?? 0}分` : "未実施"}
+                      今日: {formatRecordValue(habit, todayRecord)}
                     </p>
                   </div>
                   <button
@@ -812,9 +905,7 @@ function LogScreen({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-black text-hobi-ink">{habit.name}</p>
-                    <p className="text-sm text-hobi-muted">
-                      {record?.done ? `実施済み / ${record.durationMinutes} min` : "未実施"}
-                    </p>
+                    <p className="text-sm text-hobi-muted">{formatRecordValue(habit, record)}</p>
                   </div>
                   <ChevronRight className="text-hobi-muted" size={18} />
                 </button>
@@ -862,7 +953,16 @@ function ChartScreen({
   };
   const streakDiff = selectedStreak.current - selectedStreak.previous;
   const range = getAnalyticsRange(selectedYear, analyticsPeriod, todayKey);
-  const chartData = buildCumulativeSeries(targetId, records, range.startKey, range.endKey);
+  const isValueBased = targetHabit ? targetHabit.recordMethod !== "done" : false;
+  const metricUnit = targetHabit ? getHabitUnit(targetHabit) : "日";
+  const chartUnit = isValueBased ? metricUnit : "日";
+  const chartData = buildCumulativeSeries(
+    targetId,
+    records,
+    range.startKey,
+    range.endKey,
+    isValueBased ? "quantity" : "days"
+  );
   const summary = getSummaryStats(records, range.startKey, range.endKey, targetId);
   const heatmapCells = useMemo(
     () => buildYearHeatmap(selectedYear, records, targetId),
@@ -906,9 +1006,9 @@ function ChartScreen({
     },
     {
       icon: <Clock size={21} />,
-      label: "総実施日数",
-      value: summary.totalDone,
-      unit: "日",
+      label: isValueBased ? "総記録量" : "総実施日数",
+      value: isValueBased ? summary.totalQuantity.toFixed(summary.totalQuantity % 1 === 0 ? 0 : 1) : summary.totalDone,
+      unit: isValueBased ? metricUnit : "日",
       subLabel: "対象期間内",
       variant: "blue"
     },
@@ -922,10 +1022,10 @@ function ChartScreen({
     },
     {
       icon: <Star size={21} />,
-      label: "平均/日",
-      value: summary.averagePerDay.toFixed(1),
-      unit: "回",
-      subLabel: "1日平均",
+      label: isValueBased ? "平均/実施日" : "平均/日",
+      value: (isValueBased ? summary.averageQuantityPerActiveDay : summary.averagePerDay).toFixed(1),
+      unit: isValueBased ? metricUnit : "回",
+      subLabel: isValueBased ? "実施日の平均" : "1日平均",
       variant: "purple"
     },
     {
@@ -1094,7 +1194,7 @@ function ChartScreen({
       <div className="glass-card mb-4 p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-lg font-black text-hobi-ink">
-            累計実施日数の推移 <Info size={17} className="text-hobi-muted" />
+            {isValueBased ? "累計記録量の推移" : "累計実施日数の推移"} <Info size={17} className="text-hobi-muted" />
           </h2>
           <div className="rounded-full bg-slate-100 p-1 text-sm font-black">
             {(Object.keys(periodLabels) as AnalyticsPeriod[]).map((period) => (
@@ -1132,7 +1232,7 @@ function ChartScreen({
                       borderRadius: 16,
                       boxShadow: "0 18px 48px rgba(47, 103, 255, 0.14)"
                     }}
-                    formatter={(value, name) => [`${value}日`, name]}
+                    formatter={(value, name) => [`${value}${chartUnit}`, name]}
                     labelFormatter={(value) => formatShortDate(String(value))}
                   />
                   <Line
@@ -1215,6 +1315,10 @@ function HabitsScreen({
                   </div>
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate text-lg font-black text-hobi-ink">{habit.name}</h2>
+                    <p className="mt-1 truncate text-sm font-bold text-hobi-muted">
+                      記録方法: {RECORD_METHOD_META[habit.recordMethod].label}
+                      {habit.recordMethod === "custom" && habit.customUnit ? ` / ${habit.customUnit}` : ""}
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -1383,6 +1487,10 @@ function RecordModal({
 
   if (!draft || !habit) return null;
 
+  const methodMeta = RECORD_METHOD_META[habit.recordMethod];
+  const unit = getHabitUnit(habit);
+  const shouldShowQuantity = habit.recordMethod !== "done";
+
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-slate-950/20 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
       <div className="glass-card w-full max-w-[430px] p-5">
@@ -1419,7 +1527,7 @@ function RecordModal({
                   ...draft,
                   date: nextDate,
                   done: existingForDate?.done ?? draft.done,
-                  durationMinutes: existingForDate?.durationMinutes ?? draft.durationMinutes,
+                  quantity: existingForDate?.quantity ?? existingForDate?.durationMinutes ?? draft.quantity,
                   memo: existingForDate?.memo ?? draft.memo
                 });
               }}
@@ -1436,19 +1544,30 @@ function RecordModal({
               type="checkbox"
             />
           </label>
-          <label className="block">
-            <span className="mb-2 block text-sm font-black text-hobi-muted">作業時間 分</span>
-            <input
-              className="field"
-              enterKeyHint="done"
-              inputMode="numeric"
-              min={0}
-              onChange={(event) => setDraft({ ...draft, durationMinutes: Math.max(0, Number(event.target.value) || 0) })}
-              onFocus={(event) => event.target.select()}
-              type="number"
-              value={draft.durationMinutes}
-            />
-          </label>
+          {shouldShowQuantity ? (
+            <label className="block">
+              <span className="mb-2 block text-sm font-black text-hobi-muted">
+                {habit.recordMethod === "custom" ? `記録値 ${unit}` : methodMeta.inputLabel}
+              </span>
+              <input
+                className="field"
+                enterKeyHint="done"
+                inputMode="decimal"
+                min={0}
+                onChange={(event) => setDraft({ ...draft, quantity: Math.max(0, Number(event.target.value) || 0) })}
+                onFocus={(event) => event.target.select()}
+                placeholder={methodMeta.placeholder}
+                step={habit.recordMethod === "distance" ? "0.1" : "1"}
+                type="number"
+                value={draft.quantity}
+              />
+            </label>
+          ) : (
+            <div className="rounded-2xl border border-hobi-border bg-white/60 px-4 py-3">
+              <p className="text-sm font-black text-hobi-muted">記録方法</p>
+              <p className="mt-1 font-black text-hobi-ink">実施のみ</p>
+            </div>
+          )}
           <label className="block">
             <span className="mb-2 block text-sm font-black text-hobi-muted">メモ</span>
             <textarea
@@ -1490,10 +1609,12 @@ function HabitFormModal({
 }) {
   if (!form) return null;
 
+  const canSave = form.name.trim().length > 0 && (form.recordMethod !== "custom" || form.customUnit.trim().length > 0);
+
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-slate-950/20 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
-      <div className="glass-card max-h-[calc(100dvh-32px)] w-full max-w-[430px] p-5">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="glass-card flex max-h-[calc(100dvh-32px)] w-full max-w-[430px] flex-col p-5">
+        <div className="mb-5 flex flex-none items-center justify-between">
           <div>
             <p className="text-sm font-bold text-hobi-muted">習慣管理</p>
             <h2 className="text-xl font-black text-hobi-ink">{form.id ? "習慣を編集" : "新しい習慣を追加"}</h2>
@@ -1503,7 +1624,7 @@ function HabitFormModal({
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="-mx-1 min-h-0 flex-1 space-y-4 overflow-y-auto px-1 pb-1">
           <label className="block">
             <span className="mb-2 block text-sm font-black text-hobi-muted">習慣名</span>
             <input
@@ -1571,9 +1692,65 @@ function HabitFormModal({
               ))}
             </div>
           </div>
+
+          <div>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="block text-sm font-black text-hobi-muted">記録方法</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-hobi-muted">
+                選択中: {RECORD_METHOD_META[form.recordMethod].label}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {RECORD_METHOD_OPTIONS.map((method) => {
+                const isSelected = form.recordMethod === method;
+
+                return (
+                  <button
+                    aria-pressed={isSelected}
+                    className={cx(
+                      "flex items-center gap-2 rounded-2xl border p-3 text-left text-sm font-black transition",
+                      isSelected ? "border-hobi-blue bg-blue-50 text-hobi-blue" : "border-hobi-border bg-white/60 text-hobi-ink"
+                    )}
+                    key={method}
+                    onClick={() => setForm({ ...form, recordMethod: method })}
+                    type="button"
+                  >
+                    <span
+                      className={cx(
+                        "flex h-5 w-5 flex-none items-center justify-center rounded-full border",
+                        isSelected ? "border-hobi-blue bg-hobi-blue text-white" : "border-slate-300 bg-white"
+                      )}
+                    >
+                      {isSelected ? <Check size={13} strokeWidth={3} /> : null}
+                    </span>
+                    {RECORD_METHOD_META[method].label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {form.recordMethod === "custom" ? (
+            <label className="block">
+              <span className="mb-2 block text-sm font-black text-hobi-muted">カスタム単位</span>
+              <input
+                className="field"
+                maxLength={12}
+                onChange={(event) => setForm({ ...form, customUnit: event.target.value })}
+                placeholder="例: 単語、枚"
+                value={form.customUnit}
+              />
+              <span className="mt-2 block text-xs font-bold text-hobi-muted">記録時の数値の後ろに表示されます。</span>
+            </label>
+          ) : null}
         </div>
 
-        <button className="primary-button mt-5 w-full" onClick={onSave} type="button">
+        <button
+          className="primary-button mt-5 w-full flex-none disabled:opacity-50"
+          disabled={!canSave}
+          onClick={onSave}
+          type="button"
+        >
           <Save size={17} />
           保存する
         </button>

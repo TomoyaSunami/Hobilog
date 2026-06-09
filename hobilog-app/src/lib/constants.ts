@@ -1,4 +1,4 @@
-import type { Habit, HabitColor, HabitIcon, Settings } from "@/types";
+import type { Habit, HabitColor, HabitIcon, RecordMethod, Settings } from "@/types";
 
 export const HABIT_STORAGE_KEY = "hobilog:habits";
 export const RECORD_STORAGE_KEY = "hobilog:records";
@@ -12,6 +12,7 @@ export const DEFAULT_HABITS: Habit[] = [
     name: "筋トレ",
     icon: "Dumbbell",
     color: "Blue",
+    recordMethod: "count",
     createdAt: initialTimestamp,
     updatedAt: initialTimestamp
   },
@@ -20,6 +21,7 @@ export const DEFAULT_HABITS: Habit[] = [
     name: "読書",
     icon: "BookMarked",
     color: "Pink",
+    recordMethod: "pages",
     createdAt: initialTimestamp,
     updatedAt: initialTimestamp
   },
@@ -28,6 +30,7 @@ export const DEFAULT_HABITS: Habit[] = [
     name: "勉強",
     icon: "BookOpen",
     color: "Cyan",
+    recordMethod: "time",
     createdAt: initialTimestamp,
     updatedAt: initialTimestamp
   }
@@ -71,6 +74,55 @@ export const ICON_OPTIONS: HabitIcon[] = [
 ];
 
 export const COLOR_OPTIONS: HabitColor[] = ["Blue", "Cyan", "Pink", "Purple", "Green", "Amber", "Red", "Orange", "Slate"];
+
+export const RECORD_METHOD_OPTIONS: RecordMethod[] = ["done", "time", "count", "distance", "pages", "custom"];
+
+export const RECORD_METHOD_META: Record<
+  RecordMethod,
+  {
+    label: string;
+    unit: string;
+    inputLabel: string;
+    placeholder: string;
+  }
+> = {
+  done: {
+    label: "実施のみ",
+    unit: "",
+    inputLabel: "実施のみ",
+    placeholder: ""
+  },
+  time: {
+    label: "時間",
+    unit: "分",
+    inputLabel: "時間 分",
+    placeholder: "例: 60"
+  },
+  count: {
+    label: "回数",
+    unit: "回",
+    inputLabel: "回数 回",
+    placeholder: "例: 30"
+  },
+  distance: {
+    label: "距離",
+    unit: "km",
+    inputLabel: "距離 km",
+    placeholder: "例: 5"
+  },
+  pages: {
+    label: "ページ数",
+    unit: "ページ",
+    inputLabel: "ページ数 ページ",
+    placeholder: "例: 40"
+  },
+  custom: {
+    label: "カスタム",
+    unit: "",
+    inputLabel: "記録値",
+    placeholder: "例: 100"
+  }
+};
 
 export const COLOR_THEME: Record<
   HabitColor,

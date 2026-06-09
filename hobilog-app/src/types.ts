@@ -32,6 +32,8 @@ export type HabitIcon =
 
 export type HabitColor = "Blue" | "Cyan" | "Pink" | "Purple" | "Green" | "Amber" | "Red" | "Orange" | "Slate";
 
+export type RecordMethod = "done" | "time" | "count" | "distance" | "pages" | "custom";
+
 export type AnalyticsPeriod = "1m" | "3m" | "6m" | "1y";
 
 export interface Habit {
@@ -39,6 +41,8 @@ export interface Habit {
   name: string;
   icon: HabitIcon;
   color: HabitColor;
+  recordMethod: RecordMethod;
+  customUnit?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -48,7 +52,8 @@ export interface HabitRecord {
   habitId: string;
   date: string;
   done: boolean;
-  durationMinutes: number;
+  quantity: number;
+  durationMinutes?: number;
   memo: string;
   updatedAt: string;
 }
@@ -69,7 +74,9 @@ export interface HabitStreak {
 
 export interface SummaryStats {
   totalDone: number;
+  totalQuantity: number;
   activeDays: number;
   averagePerDay: number;
+  averageQuantityPerActiveDay: number;
   completionRate: number;
 }

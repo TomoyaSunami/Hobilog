@@ -14,6 +14,12 @@ function doneRecords(records: HabitRecord[], todayKey = toDateKey()): HabitRecor
   return records.filter((record) => record.done && record.date <= todayKey);
 }
 
+function getRecordQuantity(record: HabitRecord): number {
+  const quantity = Number(record.quantity ?? record.durationMinutes ?? 0);
+  if (!Number.isFinite(quantity)) return 0;
+  return Math.max(0, quantity);
+}
+
 function doneSetForHabit(records: HabitRecord[], habitId: string, todayKey = toDateKey()): Set<string> {
   return new Set(
     doneRecords(records, todayKey)
@@ -110,15 +116,22 @@ export function buildCumulativeSeries(
   habitId: string,
   records: HabitRecord[],
   startKey: string,
-  endKey: string
+  endKey: string,
+  mode: "days" | "quantity" = "days"
 ): Array<{ date: string; label: string; value: number }> {
-  const doneDates = doneSetForHabit(records, habitId, endKey);
+  const targetRecords = records.filter(
+    (record) => record.habitId === habitId && record.done && record.date >= startKey && record.date <= endKey
+  );
+  const valueByDate = new Map<string, number>();
   let total = 0;
 
+  targetRecords.forEach((record) => {
+    const value = mode === "quantity" ? getRecordQuantity(record) : 1;
+    valueByDate.set(record.date, (valueByDate.get(record.date) ?? 0) + value);
+  });
+
   return eachDay(startKey, endKey).map((dateKey) => {
-    if (doneDates.has(dateKey)) {
-      total += 1;
-    }
+    total += valueByDate.get(dateKey) ?? 0;
 
     return {
       date: dateKey,
@@ -142,12 +155,14 @@ export function getSummaryStats(
     return record.habitId === habitId;
   });
   const totalDone = targetRecords.length;
+  const totalQuantity = targetRecords.reduce((total, record) => total + getRecordQuantity(record), 0);
   const activeDays = new Set(targetRecords.map((record) => record.date)).size;
   const periodDays = daysBetweenInclusive(startKey, endKey);
   const averagePerDay = totalDone / periodDays;
+  const averageQuantityPerActiveDay = activeDays > 0 ? totalQuantity / activeDays : 0;
   const completionRate = (activeDays / periodDays) * 100;
 
-  return { totalDone, activeDays, averagePerDay, completionRate };
+  return { totalDone, totalQuantity, activeDays, averagePerDay, averageQuantityPerActiveDay, completionRate };
 }
 
 export function getAnalyticsRange(year: number, period: AnalyticsPeriod, todayKey = toDateKey()) {
