@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, Reorder, useDragControls } from "framer-motion";
 import {
   BarChart3,
   BeerOff,
@@ -26,6 +26,7 @@ import {
   Footprints,
   GlassWater,
   GraduationCap,
+  GripVertical,
   Heart,
   Home,
   Info,
@@ -564,6 +565,10 @@ export default function HobiLogApp() {
     setHabitForm(null);
   }
 
+  function reorderHabits(nextHabits: Habit[]) {
+    setHabits(nextHabits);
+  }
+
   function confirmDeleteHabit() {
     if (!deleteHabitTarget) return;
 
@@ -612,7 +617,12 @@ export default function HobiLogApp() {
 
     if (activeTab === "habits") {
       return (
-        <HabitsScreen habits={habits} openHabitForm={openHabitForm} deleteHabit={setDeleteHabitTarget} />
+        <HabitsScreen
+          habits={habits}
+          openHabitForm={openHabitForm}
+          deleteHabit={setDeleteHabitTarget}
+          reorderHabits={reorderHabits}
+        />
       );
     }
 
@@ -1279,11 +1289,13 @@ function ChartScreen({
 function HabitsScreen({
   habits,
   openHabitForm,
-  deleteHabit
+  deleteHabit,
+  reorderHabits
 }: {
   habits: Habit[];
   openHabitForm: (habit?: Habit) => void;
   deleteHabit: (habit: Habit) => void;
+  reorderHabits: (habits: Habit[]) => void;
 }) {
   return (
     <section>
@@ -1303,48 +1315,84 @@ function HabitsScreen({
           onAction={() => openHabitForm()}
         />
       ) : (
-        <div className="space-y-3">
-          {habits.map((habit) => {
-            const theme = COLOR_THEME[habit.color];
-
-            return (
-              <article className="glass-card p-4" key={habit.id}>
-                <div className="flex items-center gap-4">
-                  <div className="icon-bubble" style={{ background: theme.soft, color: theme.text }}>
-                    <HabitIconView icon={habit.icon} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-lg font-black text-hobi-ink">{habit.name}</h2>
-                    <p className="mt-1 truncate text-sm font-bold text-hobi-muted">
-                      記録方法: {RECORD_METHOD_META[habit.recordMethod].label}
-                      {habit.recordMethod === "custom" && habit.customUnit ? ` / ${habit.customUnit}` : ""}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      aria-label={`${habit.name}を編集`}
-                      className="secondary-button h-10 min-h-10 px-3"
-                      onClick={() => openHabitForm(habit)}
-                      type="button"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      aria-label={`${habit.name}を削除`}
-                      className="danger-button h-10 min-h-10 px-3"
-                      onClick={() => deleteHabit(habit)}
-                      type="button"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+        <Reorder.Group as="div" axis="y" className="space-y-3" onReorder={reorderHabits} values={habits}>
+          {habits.map((habit) => (
+            <HabitReorderItem
+              deleteHabit={deleteHabit}
+              habit={habit}
+              key={habit.id}
+              openHabitForm={openHabitForm}
+            />
+          ))}
+        </Reorder.Group>
       )}
     </section>
+  );
+}
+
+function HabitReorderItem({
+  habit,
+  openHabitForm,
+  deleteHabit
+}: {
+  habit: Habit;
+  openHabitForm: (habit?: Habit) => void;
+  deleteHabit: (habit: Habit) => void;
+}) {
+  const dragControls = useDragControls();
+  const theme = COLOR_THEME[habit.color];
+
+  return (
+    <Reorder.Item
+      as="article"
+      className="glass-card list-none p-4"
+      dragControls={dragControls}
+      dragListener={false}
+      value={habit}
+      whileDrag={{ scale: 1.02, boxShadow: "0 22px 54px rgba(16, 35, 74, 0.18)" }}
+    >
+      <div className="flex items-center gap-4">
+        <button
+          aria-label={`${habit.name}をドラッグして並び替え`}
+          className="secondary-button h-12 min-h-12 w-10 cursor-grab touch-none px-0 active:cursor-grabbing"
+          onPointerDown={(event) => dragControls.start(event)}
+          title="ドラッグして並び替え"
+          type="button"
+        >
+          <GripVertical size={18} />
+        </button>
+        <div className="icon-bubble" style={{ background: theme.soft, color: theme.text }}>
+          <HabitIconView icon={habit.icon} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-lg font-black text-hobi-ink">{habit.name}</h2>
+          <p className="mt-1 truncate text-sm font-bold text-hobi-muted">
+            記録方法: {RECORD_METHOD_META[habit.recordMethod].label}
+            {habit.recordMethod === "custom" && habit.customUnit ? ` / ${habit.customUnit}` : ""}
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button
+          aria-label={`${habit.name}を編集`}
+          className="secondary-button h-10 min-h-10 px-0"
+          onClick={() => openHabitForm(habit)}
+          title="編集"
+          type="button"
+        >
+          <Pencil size={16} />
+        </button>
+        <button
+          aria-label={`${habit.name}を削除`}
+          className="danger-button h-10 min-h-10 px-0"
+          onClick={() => deleteHabit(habit)}
+          title="削除"
+          type="button"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </Reorder.Item>
   );
 }
 
