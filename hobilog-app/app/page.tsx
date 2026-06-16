@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, Reorder, useDragControls } from "framer-motion";
+import { AnimatePresence, motion, Reorder } from "framer-motion";
 import {
   BarChart3,
   BeerOff,
@@ -26,7 +26,6 @@ import {
   Footprints,
   GlassWater,
   GraduationCap,
-  GripVertical,
   Heart,
   Home,
   Info,
@@ -229,7 +228,8 @@ const periodLabels: Record<AnalyticsPeriod, string> = {
   "1m": "1ヶ月",
   "3m": "3ヶ月",
   "6m": "6ヶ月",
-  "1y": "1年"
+  "1y": "1年",
+  all: "全期間"
 };
 
 type RecordDraft = {
@@ -962,7 +962,7 @@ function ChartScreen({
     bestDate: null
   };
   const streakDiff = selectedStreak.current - selectedStreak.previous;
-  const range = getAnalyticsRange(selectedYear, analyticsPeriod, todayKey);
+  const range = getAnalyticsRange(selectedYear, analyticsPeriod, records, targetId, todayKey);
   const isValueBased = targetHabit ? targetHabit.recordMethod !== "done" : false;
   const metricUnit = targetHabit ? getHabitUnit(targetHabit) : "日";
   const chartUnit = isValueBased ? metricUnit : "日";
@@ -997,6 +997,12 @@ function ChartScreen({
   const hasYearDoneRecords = records.some(
     (record) => record.habitId === targetId && record.done && record.date.startsWith(`${selectedYear}-`)
   );
+  const emptyChartTitle =
+    analyticsPeriod === "all"
+      ? "全期間のデータはありません"
+      : hasYearDoneRecords
+        ? "この期間のデータはありません"
+        : "この年のデータはありません";
   const analyticsItems: MetricTileProps[] = [
     {
       icon: <Flame size={21} />,
@@ -1232,7 +1238,11 @@ function ChartScreen({
                     dataKey="date"
                     minTickGap={26}
                     stroke="#6B7A99"
-                    tickFormatter={(value) => String(value).slice(5).replace("-", "/")}
+                    tickFormatter={(value) =>
+                      analyticsPeriod === "all"
+                        ? String(value).slice(0, 7).replace("-", "/")
+                        : String(value).slice(5).replace("-", "/")
+                    }
                     tickLine={false}
                   />
                   <YAxis allowDecimals={false} stroke="#6B7A99" tickLine={false} />
@@ -1266,9 +1276,7 @@ function ChartScreen({
           </>
         ) : (
           <div className="rounded-2xl border border-dashed border-hobi-border bg-white/60 p-6 text-center">
-            <p className="text-lg font-black text-hobi-ink">
-              {hasYearDoneRecords ? "この期間のデータはありません" : "この年のデータはありません"}
-            </p>
+            <p className="text-lg font-black text-hobi-ink">{emptyChartTitle}</p>
             <p className="mt-2 text-sm font-semibold text-hobi-muted">対象期間に記録があると、ここに推移が表示されます</p>
           </div>
         )}
@@ -1339,28 +1347,16 @@ function HabitReorderItem({
   openHabitForm: (habit?: Habit) => void;
   deleteHabit: (habit: Habit) => void;
 }) {
-  const dragControls = useDragControls();
   const theme = COLOR_THEME[habit.color];
 
   return (
     <Reorder.Item
       as="article"
-      className="glass-card list-none p-4"
-      dragControls={dragControls}
-      dragListener={false}
+      className="glass-card list-none p-4 cursor-grab touch-none active:cursor-grabbing"
       value={habit}
       whileDrag={{ scale: 1.02, boxShadow: "0 22px 54px rgba(16, 35, 74, 0.18)" }}
     >
       <div className="flex items-center gap-4">
-        <button
-          aria-label={`${habit.name}をドラッグして並び替え`}
-          className="secondary-button h-12 min-h-12 w-10 cursor-grab touch-none px-0 active:cursor-grabbing"
-          onPointerDown={(event) => dragControls.start(event)}
-          title="ドラッグして並び替え"
-          type="button"
-        >
-          <GripVertical size={18} />
-        </button>
         <div className="icon-bubble" style={{ background: theme.soft, color: theme.text }}>
           <HabitIconView icon={habit.icon} />
         </div>
@@ -1371,26 +1367,28 @@ function HabitReorderItem({
             {habit.recordMethod === "custom" && habit.customUnit ? ` / ${habit.customUnit}` : ""}
           </p>
         </div>
-      </div>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <button
-          aria-label={`${habit.name}を編集`}
-          className="secondary-button h-10 min-h-10 px-0"
-          onClick={() => openHabitForm(habit)}
-          title="編集"
-          type="button"
-        >
-          <Pencil size={16} />
-        </button>
-        <button
-          aria-label={`${habit.name}を削除`}
-          className="danger-button h-10 min-h-10 px-0"
-          onClick={() => deleteHabit(habit)}
-          title="削除"
-          type="button"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <button
+            aria-label={`${habit.name}を編集`}
+            className="secondary-button h-10 min-h-10 w-10 cursor-pointer px-0"
+            onClick={() => openHabitForm(habit)}
+            onPointerDown={(event) => event.stopPropagation()}
+            title="編集"
+            type="button"
+          >
+            <Pencil size={16} />
+          </button>
+          <button
+            aria-label={`${habit.name}を削除`}
+            className="danger-button h-10 min-h-10 w-10 cursor-pointer px-0"
+            onClick={() => deleteHabit(habit)}
+            onPointerDown={(event) => event.stopPropagation()}
+            title="削除"
+            type="button"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
     </Reorder.Item>
   );

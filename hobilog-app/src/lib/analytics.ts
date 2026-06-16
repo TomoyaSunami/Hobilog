@@ -165,6 +165,31 @@ export function getSummaryStats(
   return { totalDone, totalQuantity, activeDays, averagePerDay, averageQuantityPerActiveDay, completionRate };
 }
 
-export function getAnalyticsRange(year: number, period: AnalyticsPeriod, todayKey = toDateKey()) {
+function getOldestDoneDateForHabit(records: HabitRecord[], habitId: string, todayKey: string): string | null {
+  return doneRecords(records, todayKey)
+    .filter((record) => record.habitId === habitId)
+    .reduce<string | null>((oldestDate, record) => {
+      if (!oldestDate || record.date < oldestDate) {
+        return record.date;
+      }
+
+      return oldestDate;
+    }, null);
+}
+
+export function getAnalyticsRange(
+  year: number,
+  period: AnalyticsPeriod,
+  records: HabitRecord[] = [],
+  habitId = "",
+  todayKey = toDateKey()
+) {
+  if (period === "all") {
+    return {
+      startKey: getOldestDoneDateForHabit(records, habitId, todayKey) ?? todayKey,
+      endKey: todayKey
+    };
+  }
+
   return getPeriodRange(year, period, todayKey);
 }

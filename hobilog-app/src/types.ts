@@ -34,7 +34,7 @@ export type HabitColor = "Blue" | "Cyan" | "Pink" | "Purple" | "Green" | "Amber"
 
 export type RecordMethod = "done" | "time" | "count" | "distance" | "pages" | "custom";
 
-export type AnalyticsPeriod = "1m" | "3m" | "6m" | "1y";
+export type AnalyticsPeriod = "1m" | "3m" | "6m" | "1y" | "all";
 
 export interface Habit {
   id: string;
