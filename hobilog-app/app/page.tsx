@@ -1053,6 +1053,24 @@ function ChartScreen({
       variant: "pink"
     }
   ];
+  const metricDescriptions = [
+    ["現在連続", "今日実施済みなら今日まで、未実施なら昨日まで連続して実施した日数です。"],
+    ["最長連続", "これまでに最も長く連続して実施できた日数です。表示日付はその連続記録を達成した日です。"],
+    [
+      isValueBased ? "総記録量" : "総実施日数",
+      isValueBased
+        ? `対象期間内に記録した${metricUnit}の合計です。`
+        : "対象期間内で実施済みにした日数です。"
+    ],
+    ["実施日数", "対象期間内で1回以上実施した日を、日付の重複なしで数えます。"],
+    [
+      isValueBased ? "平均/実施日" : "平均/日",
+      isValueBased
+        ? `実施した日の総記録量を実施日数で割った平均${metricUnit}です。`
+        : "対象期間の日数に対して、1日あたり何回実施したかの平均です。"
+    ],
+    ["実施率", "対象期間の日数のうち、1回以上実施した日が占める割合です。"]
+  ];
   const [isTargetMenuOpen, setIsTargetMenuOpen] = useState(false);
   const yearControl = (
     <label className="soft-control flex items-center gap-2 px-3 py-2">
@@ -1282,7 +1300,25 @@ function ChartScreen({
         )}
 
         <div className="mt-5 border-t border-hobi-border pt-4">
-          <h3 className="mb-4 text-lg font-black text-hobi-ink">分析指標</h3>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <h3 className="text-lg font-black text-hobi-ink">分析指標</h3>
+            <details className="metric-info-disclosure">
+              <summary aria-label="分析指標の説明を表示">
+                <Info size={16} />
+              </summary>
+              <div className="metric-info-panel">
+                <p className="text-sm font-black text-hobi-ink">分析指標の見方</p>
+                <dl className="mt-3 space-y-2">
+                  {metricDescriptions.map(([label, description]) => (
+                    <div key={label}>
+                      <dt className="text-xs font-black text-hobi-ink">{label}</dt>
+                      <dd className="mt-0.5 text-xs font-semibold leading-relaxed text-hobi-muted">{description}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </details>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             {analyticsItems.map((item) => (
               <MetricTile key={item.label} {...item} />
