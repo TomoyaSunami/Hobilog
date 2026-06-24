@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_HABITS,
@@ -35,6 +34,11 @@ function safeParse<T>(value: string | null, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+function safeParseArray<T>(value: string | null, fallback: T[]): T[] {
+  const parsed = safeParse<unknown>(value, fallback);
+  return Array.isArray(parsed) ? (parsed as T[]) : fallback;
 }
 
 function isRecordMethod(method: unknown): method is RecordMethod {
@@ -123,10 +127,10 @@ export default function HobiLogApp() {
     const storedHabits = localStorage.getItem(HABIT_STORAGE_KEY);
     const storedRecords = localStorage.getItem(RECORD_STORAGE_KEY);
     const storedSettings = safeParse(localStorage.getItem(SETTINGS_STORAGE_KEY), DEFAULT_SETTINGS);
-    const parsedHabits = storedHabits ? safeParse<Habit[]>(storedHabits, DEFAULT_HABITS) : DEFAULT_HABITS;
+    const parsedHabits = safeParseArray<Habit>(storedHabits, DEFAULT_HABITS);
 
     setHabits(parsedHabits.map((habit) => normalizeHabit(habit)));
-    setRecords(safeParse<HabitRecord[]>(storedRecords, []).map((record) => normalizeRecord(record)));
+    setRecords(safeParseArray<HabitRecord>(storedRecords, []).map((record) => normalizeRecord(record)));
     setActiveTab(storedSettings.activeTab ?? DEFAULT_SETTINGS.activeTab);
     setAnalyticsTarget(storedSettings.selectedAnalyticsHabitId ?? DEFAULT_HABITS[0]?.id ?? "");
     setSelectedYear(storedSettings.selectedAnalyticsYear ?? new Date().getFullYear());
@@ -174,17 +178,28 @@ export default function HobiLogApp() {
     }
   }, [analyticsTarget, deleteHabitTarget, habits]);
 
-  useEffect(() => {
-    const availableYears = getAvailableYears(records, todayKey);
-    if (!availableYears.includes(selectedYear)) {
-      setSelectedYear(availableYears[0]);
-    }
-  }, [records, selectedYear, todayKey]);
+  const activeHabitIds = useMemo(() => new Set(habits.map((habit) => habit.id)), [habits]);
+  const activeRecords = useMemo(
+    () => records.filter((record) => activeHabitIds.has(record.habitId)),
+    [activeHabitIds, records]
+  );
 
-  const streaks = useMemo(() => getAllStreaks(habits, records, todayKey), [habits, records, todayKey]);
+  useEffect(() => {
+    const availableYears = getAvailableYears(activeRecords, todayKey);
+    if (!availableYears.includes(selectedYear)) {
+      setSelectedYear(availableYears[0] ?? Number(todayKey.slice(0, 4)));
+    }
+  }, [activeRecords, selectedYear, todayKey]);
+
+  const streaks = useMemo(() => getAllStreaks(habits, activeRecords, todayKey), [habits, activeRecords, todayKey]);
   const todayDoneCount = useMemo(
-    () => new Set(records.filter((record) => record.date === todayKey && record.done).map((record) => record.habitId)).size,
-    [records, todayKey]
+    () =>
+      new Set(
+        activeRecords
+          .filter((record) => record.date === todayKey && record.done)
+          .map((record) => record.habitId)
+      ).size,
+    [activeRecords, todayKey]
   );
 
   function openRecord(habitId: string, date: string) {
@@ -327,7 +342,7 @@ export default function HobiLogApp() {
       return (
         <LogScreen
           habits={habits}
-          records={records}
+          records={activeRecords}
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
           logMonth={logMonth}
@@ -343,7 +358,7 @@ export default function HobiLogApp() {
       return (
         <ChartScreen
           habits={habits}
-          records={records}
+          records={activeRecords}
           streaks={streaks}
           todayKey={todayKey}
           analyticsTarget={analyticsTarget}
@@ -370,7 +385,7 @@ export default function HobiLogApp() {
     return (
       <HomeScreen
         habits={habits}
-        records={records}
+        records={activeRecords}
         streaks={streaks}
         todayDoneCount={todayDoneCount}
         todayKey={todayKey}
@@ -383,17 +398,7 @@ export default function HobiLogApp() {
   return (
     <main className="app-shell">
       <div className="screen">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            initial={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.2 }}
-          >
-            {activeScreen}
-          </motion.div>
-        </AnimatePresence>
+        {activeScreen}
       </div>
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
       <RecordModal

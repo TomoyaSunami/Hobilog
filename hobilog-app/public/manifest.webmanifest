@@ -2,26 +2,26 @@
   "name": "HobiLog",
   "short_name": "HobiLog",
   "description": "A personal habit tracking PWA.",
-  "start_url": "/Hobilog/",
-  "scope": "/Hobilog/",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#F8FBFF",
   "theme_color": "#2F67FF",
   "icons": [
     {
-      "src": "/Hobilog/icon.svg",
+      "src": "icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "/Hobilog/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/Hobilog/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
