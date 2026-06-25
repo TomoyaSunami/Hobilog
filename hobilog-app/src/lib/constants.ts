@@ -13,6 +13,7 @@ export const DEFAULT_HABITS: Habit[] = [
     icon: "Dumbbell",
     color: "Blue",
     recordMethod: "count",
+    schedule: { type: "daily" },
     createdAt: initialTimestamp,
     updatedAt: initialTimestamp
   },
@@ -22,6 +23,7 @@ export const DEFAULT_HABITS: Habit[] = [
     icon: "BookMarked",
     color: "Pink",
     recordMethod: "pages",
+    schedule: { type: "daily" },
     createdAt: initialTimestamp,
     updatedAt: initialTimestamp
   },
@@ -31,6 +33,7 @@ export const DEFAULT_HABITS: Habit[] = [
     icon: "BookOpen",
     color: "Cyan",
     recordMethod: "time",
+    schedule: { type: "daily" },
     createdAt: initialTimestamp,
     updatedAt: initialTimestamp
   }

@@ -1,7 +1,6 @@
 import type { AnalyticsPeriod, Habit, HabitRecord, HabitStreak, SummaryStats } from "@/types";
 import {
   addDays,
-  daysBetweenInclusive,
   eachDay,
   fromDateKey,
   getPeriodRange,
@@ -9,6 +8,7 @@ import {
   getYearStartKey,
   toDateKey
 } from "@/lib/date";
+import { getScheduledDates, isHabitScheduledOn } from "@/lib/schedule";
 
 function doneRecords(records: HabitRecord[], todayKey = toDateKey()): HabitRecord[] {
   return records.filter((record) => record.done && record.date <= todayKey);
@@ -28,45 +28,61 @@ function doneSetForHabit(records: HabitRecord[], habitId: string, todayKey = toD
   );
 }
 
-function countBackwards(doneDates: Set<string>, anchorKey: string): number {
+function getHabitStartKey(habit: Habit, records: HabitRecord[], todayKey: string): string {
+  const createdDate = habit.createdAt?.slice(0, 10);
+  const oldestDoneDate = doneRecords(records, todayKey)
+    .filter((record) => record.habitId === habit.id)
+    .reduce<string | null>((oldestDate, record) => {
+      if (!oldestDate || record.date < oldestDate) {
+        return record.date;
+      }
+
+      return oldestDate;
+    }, null);
+
+  const candidates = [createdDate, oldestDoneDate, habit.schedule.type === "alternateDays" ? habit.schedule.anchorDate : null]
+    .filter((dateKey): dateKey is string => Boolean(dateKey) && dateKey <= todayKey)
+    .sort();
+
+  return candidates[0] ?? todayKey;
+}
+
+function countBackwardsScheduled(scheduledDates: string[], doneDates: Set<string>, anchorIndex: number): number {
   let count = 0;
 
-  for (let cursor = fromDateKey(anchorKey); doneDates.has(toDateKey(cursor)); cursor = addDays(cursor, -1)) {
+  for (let index = anchorIndex; index >= 0 && doneDates.has(scheduledDates[index]); index -= 1) {
     count += 1;
   }
 
   return count;
 }
 
-export function getHabitStreak(records: HabitRecord[], habitId: string, todayKey = toDateKey()): HabitStreak {
-  const doneDates = doneSetForHabit(records, habitId, todayKey);
-  const yesterdayKey = toDateKey(addDays(fromDateKey(todayKey), -1));
-  const currentAnchor = doneDates.has(todayKey) ? todayKey : yesterdayKey;
-  const current = countBackwards(doneDates, currentAnchor);
-  const previous = countBackwards(doneDates, yesterdayKey);
-  const sortedDoneDates = [...doneDates].sort();
+export function getHabitStreak(records: HabitRecord[], habit: Habit, todayKey = toDateKey()): HabitStreak {
+  const doneDates = doneSetForHabit(records, habit.id, todayKey);
+  const startKey = getHabitStartKey(habit, records, todayKey);
+  const scheduledDates = getScheduledDates(habit, startKey, todayKey);
+  const currentAnchorIndex = scheduledDates.length - 1;
+  const previousAnchorIndex = currentAnchorIndex - 1;
+  const current = currentAnchorIndex >= 0 ? countBackwardsScheduled(scheduledDates, doneDates, currentAnchorIndex) : 0;
+  const previous = previousAnchorIndex >= 0 ? countBackwardsScheduled(scheduledDates, doneDates, previousAnchorIndex) : 0;
   let best = 0;
   let bestDate: string | null = null;
   let run = 0;
-  let previousDate: string | null = null;
 
-  for (const dateKey of sortedDoneDates) {
-    const expected = previousDate ? toDateKey(addDays(fromDateKey(previousDate), 1)) : null;
-    run = expected === dateKey ? run + 1 : 1;
+  for (const dateKey of scheduledDates) {
+    run = doneDates.has(dateKey) ? run + 1 : 0;
 
     if (run > best) {
       best = run;
       bestDate = dateKey;
     }
-
-    previousDate = dateKey;
   }
 
-  return { habitId, current, previous, best, bestDate };
+  return { habitId: habit.id, current, previous, best, bestDate };
 }
 
 export function getAllStreaks(habits: Habit[], records: HabitRecord[], todayKey = toDateKey()): HabitStreak[] {
-  return habits.map((habit) => getHabitStreak(records, habit.id, todayKey));
+  return habits.map((habit) => getHabitStreak(records, habit, todayKey));
 }
 
 export function getAvailableYears(records: HabitRecord[], todayKey = toDateKey()): number[] {
@@ -89,23 +105,25 @@ export function getDoneHabitCountForDate(records: HabitRecord[], dateKey: string
   ).size;
 }
 
-export function buildYearHeatmap(year: number, records: HabitRecord[], habitId: string) {
+export function buildYearHeatmap(year: number, records: HabitRecord[], habit: Habit) {
   const startKey = getYearStartKey(year);
   const endKey = getYearEndKey(year);
   const first = fromDateKey(startKey);
   const gridStart = addDays(first, -first.getDay());
-  const doneDates = doneSetForHabit(records, habitId, endKey);
-  const cells: Array<{ date: string | null; value: number; isInYear: boolean }> = [];
+  const doneDates = doneSetForHabit(records, habit.id, endKey);
+  const cells: Array<{ date: string | null; value: number; isInYear: boolean; isScheduled: boolean }> = [];
 
   for (let index = 0; index < 54 * 7; index += 1) {
     const date = addDays(gridStart, index);
     const dateKey = toDateKey(date);
     const isInYear = dateKey >= startKey && dateKey <= endKey;
+    const isScheduled = isInYear && isHabitScheduledOn(habit, dateKey);
 
     cells.push({
       date: isInYear ? dateKey : null,
       value: isInYear && doneDates.has(dateKey) ? 1 : 0,
-      isInYear
+      isInYear,
+      isScheduled
     });
   }
 
@@ -145,24 +163,36 @@ export function getSummaryStats(
   records: HabitRecord[],
   startKey: string,
   endKey: string,
-  habitId: string
+  habit: Habit
 ): SummaryStats {
+  const scheduledDates = getScheduledDates(habit, startKey, endKey);
+  const scheduledDateSet = new Set(scheduledDates);
   const targetRecords = records.filter((record) => {
     if (!record.done || record.date < startKey || record.date > endKey) {
       return false;
     }
 
-    return record.habitId === habitId;
+    return record.habitId === habit.id;
   });
+  const scheduledTargetRecords = targetRecords.filter((record) => scheduledDateSet.has(record.date));
   const totalDone = targetRecords.length;
   const totalQuantity = targetRecords.reduce((total, record) => total + getRecordQuantity(record), 0);
   const activeDays = new Set(targetRecords.map((record) => record.date)).size;
-  const periodDays = daysBetweenInclusive(startKey, endKey);
-  const averagePerDay = totalDone / periodDays;
+  const scheduledActiveDays = new Set(scheduledTargetRecords.map((record) => record.date)).size;
+  const scheduledDays = scheduledDates.length;
+  const averagePerDay = scheduledDays > 0 ? scheduledTargetRecords.length / scheduledDays : 0;
   const averageQuantityPerActiveDay = activeDays > 0 ? totalQuantity / activeDays : 0;
-  const completionRate = (activeDays / periodDays) * 100;
+  const completionRate = scheduledDays > 0 ? (scheduledActiveDays / scheduledDays) * 100 : 0;
 
-  return { totalDone, totalQuantity, activeDays, averagePerDay, averageQuantityPerActiveDay, completionRate };
+  return {
+    totalDone,
+    totalQuantity,
+    activeDays,
+    scheduledDays,
+    averagePerDay,
+    averageQuantityPerActiveDay,
+    completionRate
+  };
 }
 
 function getOldestDoneDateForHabit(records: HabitRecord[], habitId: string, todayKey: string): string | null {

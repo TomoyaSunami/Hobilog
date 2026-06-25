@@ -12,7 +12,8 @@ import {
 } from "@/lib/constants";
 import { isFutureDateKey, toDateKey } from "@/lib/date";
 import { getAllStreaks, getAvailableYears } from "@/lib/analytics";
-import type { AnalyticsPeriod, Habit, HabitIcon, HabitRecord, RecordMethod, TabId } from "@/types";
+import { isHabitScheduledOn, normalizeHabitSchedule } from "@/lib/schedule";
+import type { AnalyticsPeriod, Habit, HabitIcon, HabitRecord, HabitSchedule, RecordMethod, TabId } from "@/types";
 import {
   BottomNav,
   ChartScreen,
@@ -71,11 +72,14 @@ function normalizeHabitIcon(icon: unknown): HabitIcon {
 }
 
 function normalizeHabit(habit: Habit): Habit {
+  const fallbackDate = habit.createdAt?.slice(0, 10) || toDateKey();
+
   return {
     ...habit,
     icon: normalizeHabitIcon(habit.icon),
     recordMethod: inferRecordMethod(habit),
-    customUnit: normalizeCustomUnit(habit.customUnit)
+    customUnit: normalizeCustomUnit(habit.customUnit),
+    schedule: normalizeHabitSchedule(habit.schedule, fallbackDate)
   };
 }
 
@@ -99,6 +103,24 @@ function normalizeQuantityForMethod(method: RecordMethod, value: unknown): numbe
   }
 
   return Math.trunc(normalized);
+}
+
+function normalizeScheduleForSave(schedule: HabitSchedule, todayKey: string): HabitSchedule {
+  if (schedule.type === "alternateDays") {
+    return {
+      type: "alternateDays",
+      anchorDate: schedule.anchorDate || todayKey
+    };
+  }
+
+  if (schedule.type === "weekdays") {
+    return {
+      type: "weekdays",
+      weekdays: [...new Set(schedule.weekdays)].sort((a, b) => a - b)
+    };
+  }
+
+  return { type: "daily" };
 }
 
 function makeId(prefix: string): string {
@@ -192,14 +214,18 @@ export default function HobiLogApp() {
   }, [activeRecords, selectedYear, todayKey]);
 
   const streaks = useMemo(() => getAllStreaks(habits, activeRecords, todayKey), [habits, activeRecords, todayKey]);
+  const todayScheduledHabitIds = useMemo(
+    () => new Set(habits.filter((habit) => isHabitScheduledOn(habit, todayKey)).map((habit) => habit.id)),
+    [habits, todayKey]
+  );
   const todayDoneCount = useMemo(
     () =>
       new Set(
         activeRecords
-          .filter((record) => record.date === todayKey && record.done)
+          .filter((record) => record.date === todayKey && record.done && todayScheduledHabitIds.has(record.habitId))
           .map((record) => record.habitId)
       ).size,
-    [activeRecords, todayKey]
+    [activeRecords, todayKey, todayScheduledHabitIds]
   );
 
   function openRecord(habitId: string, date: string) {
@@ -266,7 +292,8 @@ export default function HobiLogApp() {
             icon: habit.icon,
             color: habit.color,
             recordMethod: habit.recordMethod,
-            customUnit: habit.customUnit ?? ""
+            customUnit: habit.customUnit ?? "",
+            schedule: habit.schedule
           }
         : {
             id: null,
@@ -274,7 +301,8 @@ export default function HobiLogApp() {
             icon: "Dumbbell",
             color: "Blue",
             recordMethod: "done",
-            customUnit: ""
+            customUnit: "",
+            schedule: { type: "daily" }
           }
     );
   }
@@ -284,8 +312,10 @@ export default function HobiLogApp() {
     const name = habitForm.name.trim();
     if (!name) return;
     if (habitForm.recordMethod === "custom" && !habitForm.customUnit.trim()) return;
+    if (habitForm.schedule.type === "weekdays" && habitForm.schedule.weekdays.length === 0) return;
 
     const updatedAt = new Date().toISOString();
+    const schedule = normalizeScheduleForSave(habitForm.schedule, todayKey);
 
     setHabits((current) => {
       if (habitForm.id) {
@@ -298,6 +328,7 @@ export default function HobiLogApp() {
                 color: habitForm.color,
                 recordMethod: habitForm.recordMethod,
                 customUnit: habitForm.recordMethod === "custom" ? normalizeCustomUnit(habitForm.customUnit) : "",
+                schedule,
                 updatedAt
               }
             : habit
@@ -313,6 +344,7 @@ export default function HobiLogApp() {
           color: habitForm.color,
           recordMethod: habitForm.recordMethod,
           customUnit: habitForm.recordMethod === "custom" ? normalizeCustomUnit(habitForm.customUnit) : "",
+          schedule,
           createdAt: updatedAt,
           updatedAt
         }
@@ -420,6 +452,7 @@ export default function HobiLogApp() {
         setForm={setHabitForm}
         onClose={() => setHabitForm(null)}
         onSave={saveHabit}
+        todayKey={todayKey}
       />
       <DeleteHabitModal
         habit={deleteHabitTarget}

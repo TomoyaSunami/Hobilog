@@ -36,6 +36,13 @@ export type RecordMethod = "done" | "time" | "count" | "distance" | "pages" | "c
 
 export type AnalyticsPeriod = "1m" | "3m" | "6m" | "1y" | "all";
 
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export type HabitSchedule =
+  | { type: "daily" }
+  | { type: "alternateDays"; anchorDate: string }
+  | { type: "weekdays"; weekdays: Weekday[] };
+
 export interface Habit {
   id: string;
   name: string;
@@ -43,6 +50,7 @@ export interface Habit {
   color: HabitColor;
   recordMethod: RecordMethod;
   customUnit?: string;
+  schedule: HabitSchedule;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,6 +84,7 @@ export interface SummaryStats {
   totalDone: number;
   totalQuantity: number;
   activeDays: number;
+  scheduledDays: number;
   averagePerDay: number;
   averageQuantityPerActiveDay: number;
   completionRate: number;

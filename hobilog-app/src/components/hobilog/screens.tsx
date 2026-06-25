@@ -82,7 +82,23 @@ import {
   getAvailableYears,
   getSummaryStats
 } from "@/lib/analytics";
-import type { AnalyticsPeriod, Habit, HabitColor, HabitIcon, HabitRecord, RecordMethod, TabId } from "@/types";
+import {
+  formatScheduleLabel,
+  isHabitScheduledOn,
+  SCHEDULE_LABELS,
+  WEEKDAY_OPTIONS
+} from "@/lib/schedule";
+import type {
+  AnalyticsPeriod,
+  Habit,
+  HabitColor,
+  HabitIcon,
+  HabitRecord,
+  HabitSchedule,
+  RecordMethod,
+  TabId,
+  Weekday
+} from "@/types";
 
 type InlineIconProps = {
   "aria-hidden"?: boolean | "true" | "false";
@@ -242,6 +258,7 @@ export type HabitFormState = {
   color: HabitColor;
   recordMethod: RecordMethod;
   customUnit: string;
+  schedule: HabitSchedule;
 };
 
 function cx(...classes: Array<string | false | null | undefined>): string {
@@ -301,9 +318,10 @@ export function HomeScreen({
   openRecord: (habitId: string, date: string) => void;
   openHabitForm: () => void;
 }) {
-  const progress = habits.length ? Math.round((todayDoneCount / habits.length) * 100) : 0;
-  const isComplete = habits.length > 0 && todayDoneCount === habits.length;
-  const progressStatus = todayDoneCount === 0 ? "未実施" : isComplete ? "完了" : "進行中";
+  const todayHabits = useMemo(() => habits.filter((habit) => isHabitScheduledOn(habit, todayKey)), [habits, todayKey]);
+  const progress = todayHabits.length ? Math.round((todayDoneCount / todayHabits.length) * 100) : 0;
+  const isComplete = todayHabits.length > 0 && todayDoneCount === todayHabits.length;
+  const progressStatus = todayHabits.length === 0 ? "予定なし" : todayDoneCount === 0 ? "未実施" : isComplete ? "完了" : "進行中";
 
   return (
     <section>
@@ -314,7 +332,7 @@ export function HomeScreen({
             <p className="mt-1 text-sm font-semibold text-hobi-muted">{formatShortDate(todayKey)} {formatWeekday()}</p>
             <p className="mt-2 text-3xl font-black text-hobi-ink">
               {todayDoneCount}
-              <span className="text-base font-bold text-hobi-muted"> / {habits.length}</span>
+              <span className="text-base font-bold text-hobi-muted"> / {todayHabits.length}</span>
             </p>
             <p className="mt-1 text-sm font-bold text-hobi-muted">{progressStatus}</p>
           </div>
@@ -336,9 +354,17 @@ export function HomeScreen({
           title="まだ習慣がありません"
           onAction={openHabitForm}
         />
+      ) : todayHabits.length === 0 ? (
+        <EmptyState
+          actionLabel="新しい習慣を追加"
+          description="今日が対象日の習慣はありません。ログや分析で過去の記録は確認できます。"
+          icon={<CalendarCheck size={24} />}
+          title="今日の予定はありません"
+          onAction={openHabitForm}
+        />
       ) : (
         <div className="space-y-3">
-          {habits.map((habit) => {
+          {todayHabits.map((habit) => {
             const theme = COLOR_THEME[habit.color];
             const todayRecord = records.find((record) => record.habitId === habit.id && record.date === todayKey);
             const streak = streaks.find((item) => item.habitId === habit.id);
@@ -375,7 +401,8 @@ export function HomeScreen({
                       ) : null}
                     </div>
                     <p className="mt-1 text-sm font-semibold text-hobi-muted">
-                      {RECORD_METHOD_META[habit.recordMethod].label} / 連続 {streak?.current ?? 0} 日
+                      {RECORD_METHOD_META[habit.recordMethod].label} / {formatScheduleLabel(habit.schedule)} / 連続{" "}
+                      {streak?.current ?? 0} 回
                     </p>
                     <p className="mt-1 text-sm text-hobi-muted">
                       今日: {formatRecordValue(habit, todayRecord)}
@@ -421,6 +448,14 @@ export function LogScreen({
   openHabitForm: () => void;
 }) {
   const monthDays = useMemo(() => getMonthCalendarDays(logMonth), [logMonth]);
+  const logHabits = useMemo(
+    () =>
+      habits.filter((habit) => {
+        const hasRecord = records.some((record) => record.habitId === habit.id && record.date === selectedDate);
+        return isHabitScheduledOn(habit, selectedDate) || hasRecord;
+      }),
+    [habits, records, selectedDate]
+  );
 
   return (
     <section>
@@ -487,6 +522,14 @@ export function LogScreen({
           title="記録する習慣がありません"
           onAction={openHabitForm}
         />
+      ) : logHabits.length === 0 ? (
+        <EmptyState
+          actionLabel="新しい習慣を追加"
+          description="この日に予定されている習慣はありません。"
+          icon={<CalendarCheck size={24} />}
+          title="この日の予定はありません"
+          onAction={openHabitForm}
+        />
       ) : (
         <div className="glass-card p-4">
           <div className="mb-4 flex items-center justify-between">
@@ -496,10 +539,11 @@ export function LogScreen({
             ) : null}
           </div>
           <div className="space-y-3">
-            {habits.map((habit) => {
+            {logHabits.map((habit) => {
               const theme = COLOR_THEME[habit.color];
               const record = records.find((item) => item.habitId === habit.id && item.date === selectedDate);
               const isFuture = isFutureDateKey(selectedDate, todayKey);
+              const isScheduled = isHabitScheduledOn(habit, selectedDate);
 
               return (
                 <button
@@ -513,7 +557,14 @@ export function LogScreen({
                     <HabitIconView icon={habit.icon} size={20} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-black text-hobi-ink">{habit.name}</p>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <p className="truncate font-black text-hobi-ink">{habit.name}</p>
+                      {!isScheduled && record ? (
+                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-black text-amber-700">
+                          予定外の記録
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="text-sm text-hobi-muted">{formatRecordValue(habit, record)}</p>
                   </div>
                   <ChevronRight className="text-hobi-muted" size={18} />
@@ -572,10 +623,20 @@ export function ChartScreen({
     range.endKey,
     isValueBased ? "quantity" : "days"
   );
-  const summary = getSummaryStats(records, range.startKey, range.endKey, targetId);
+  const summary = targetHabit
+    ? getSummaryStats(records, range.startKey, range.endKey, targetHabit)
+    : {
+        totalDone: 0,
+        totalQuantity: 0,
+        activeDays: 0,
+        scheduledDays: 0,
+        averagePerDay: 0,
+        averageQuantityPerActiveDay: 0,
+        completionRate: 0
+      };
   const heatmapCells = useMemo(
-    () => buildYearHeatmap(selectedYear, records, targetId),
-    [records, selectedYear, targetId]
+    () => (targetHabit ? buildYearHeatmap(selectedYear, records, targetHabit) : []),
+    [records, selectedYear, targetHabit]
   );
   const heatmapRows = useMemo(() => {
     const rows: Array<{ label: string; cells: typeof heatmapCells }> = [];
@@ -607,15 +668,15 @@ export function ChartScreen({
       icon: <Flame size={21} />,
       label: "現在連続",
       value: selectedStreak.current,
-      unit: "日",
-      subLabel: `昨日から ${streakDiff >= 0 ? "+" : ""}${streakDiff}`,
+      unit: "回",
+      subLabel: `前回から ${streakDiff >= 0 ? "+" : ""}${streakDiff}`,
       variant: "blue"
     },
     {
       icon: <Crown size={21} />,
       label: "最長連続",
       value: selectedStreak.best,
-      unit: "日",
+      unit: "回",
       subLabel: selectedStreak.bestDate ? `${formatShortDate(selectedStreak.bestDate)} 達成` : "-",
       variant: "amber"
     },
@@ -637,10 +698,10 @@ export function ChartScreen({
     },
     {
       icon: <Star size={21} />,
-      label: isValueBased ? "平均/実施日" : "平均/日",
+      label: isValueBased ? "平均/実施日" : "平均/対象日",
       value: (isValueBased ? summary.averageQuantityPerActiveDay : summary.averagePerDay).toFixed(1),
       unit: isValueBased ? metricUnit : "回",
-      subLabel: isValueBased ? "実施日の平均" : "1日平均",
+      subLabel: isValueBased ? "実施日の平均" : "対象日の平均",
       variant: "purple"
     },
     {
@@ -648,13 +709,13 @@ export function ChartScreen({
       label: "実施率",
       value: Math.round(summary.completionRate),
       unit: "%",
-      subLabel: "実施日 ÷ 期間",
+      subLabel: "実施日 ÷ 対象日",
       variant: "pink"
     }
   ];
   const metricDescriptions = [
-    ["現在連続", "今日実施済みなら今日まで、未実施なら昨日まで連続して実施した日数です。"],
-    ["最長連続", "これまでに最も長く連続して実施できた日数です。表示日付はその連続記録を達成した日です。"],
+    ["現在連続", "対象日のうち、直近の対象日まで連続して実施した回数です。対象外の日では途切れません。"],
+    ["最長連続", "これまでに最も長く対象日を連続して実施できた回数です。表示日付はその連続記録を達成した日です。"],
     [
       isValueBased ? "総記録量" : "総実施日数",
       isValueBased
@@ -663,12 +724,12 @@ export function ChartScreen({
     ],
     ["実施日数", "対象期間内で1回以上実施した日を、日付の重複なしで数えます。"],
     [
-      isValueBased ? "平均/実施日" : "平均/日",
+      isValueBased ? "平均/実施日" : "平均/対象日",
       isValueBased
         ? `実施した日の総記録量を実施日数で割った平均${metricUnit}です。`
-        : "対象期間の日数に対して、1日あたり何回実施したかの平均です。"
+        : "対象期間内の対象日に対して、1対象日あたり何回実施したかの平均です。"
     ],
-    ["実施率", "対象期間の日数のうち、1回以上実施した日が占める割合です。"]
+    ["実施率", "対象期間内の対象日のうち、1回以上実施した日が占める割合です。"]
   ];
   const [isTargetMenuOpen, setIsTargetMenuOpen] = useState(false);
   const yearControl = (
@@ -800,7 +861,7 @@ export function ChartScreen({
                   <span
                     className="heatmap-cell"
                     key={`${cell.date ?? `blank-${rowIndex}`}-${cellIndex}`}
-                    style={{ background: getHeatmapColor(cell.value, cell.isInYear, targetHabit) }}
+                    style={{ background: getHeatmapColor(cell.value, cell.isInYear, cell.isScheduled, targetHabit) }}
                     title={cell.date ? `${formatShortDate(cell.date)}: ${cell.value}回` : undefined}
                   />
                 ))}
@@ -811,12 +872,13 @@ export function ChartScreen({
         <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs font-bold text-hobi-muted">
           {[
             ["未実施", 0],
-            ["実施", 1]
+            ["実施", 1],
+            ["対象外", -1]
           ].map(([label, value]) => (
             <span className="flex items-center gap-2" key={label}>
               <span
                 className="heatmap-cell"
-                style={{ background: getHeatmapColor(Number(value), true, targetHabit) }}
+                style={{ background: getHeatmapColor(Number(value), true, Number(value) >= 0, targetHabit) }}
               />
               {label}
             </span>
@@ -1051,6 +1113,9 @@ function HabitReorderItem({
           <p className="mt-1 truncate text-sm font-bold text-hobi-muted">
             記録方法: {RECORD_METHOD_META[habit.recordMethod].label}
             {habit.recordMethod === "custom" && habit.customUnit ? ` / ${habit.customUnit}` : ""}
+          </p>
+          <p className="mt-1 truncate text-sm font-bold text-hobi-muted">
+            実施予定: {formatScheduleLabel(habit.schedule)}
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
@@ -1332,12 +1397,14 @@ export function HabitFormModal({
   form,
   setForm,
   onClose,
-  onSave
+  onSave,
+  todayKey
 }: {
   form: HabitFormState | null;
   setForm: (form: HabitFormState) => void;
   onClose: () => void;
   onSave: () => void;
+  todayKey: string;
 }) {
   if (!form) return null;
 
@@ -1346,8 +1413,56 @@ export function HabitFormModal({
     form.recordMethod === "custom" && form.customUnit.trim().length === 0
       ? "カスタム単位を入力してください。"
       : null;
-  const formError = nameError ?? customUnitError;
+  const scheduleError =
+    form.schedule.type === "weekdays" && form.schedule.weekdays.length === 0
+      ? "曜日指定では1つ以上の曜日を選択してください。"
+      : null;
+  const formError = nameError ?? customUnitError ?? scheduleError;
   const canSave = !formError;
+
+  function selectSchedule(type: HabitSchedule["type"]) {
+    if (type === "alternateDays") {
+      setForm({
+        ...form,
+        schedule:
+          form.schedule.type === "alternateDays"
+            ? form.schedule
+            : { type: "alternateDays", anchorDate: todayKey }
+      });
+      return;
+    }
+
+    if (type === "weekdays") {
+      setForm({
+        ...form,
+        schedule:
+          form.schedule.type === "weekdays"
+            ? form.schedule
+            : {
+                type: "weekdays",
+                weekdays: []
+              }
+      });
+      return;
+    }
+
+    setForm({ ...form, schedule: { type: "daily" } });
+  }
+
+  function toggleWeekday(weekday: Weekday) {
+    if (form.schedule.type !== "weekdays") return;
+
+    const selected = form.schedule.weekdays.includes(weekday)
+      ? form.schedule.weekdays.filter((item) => item !== weekday)
+      : [...form.schedule.weekdays, weekday];
+    setForm({
+      ...form,
+      schedule: {
+        type: "weekdays",
+        weekdays: selected.sort((a, b) => a - b)
+      }
+    });
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-slate-950/20 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
@@ -1475,6 +1590,64 @@ export function HabitFormModal({
             </div>
           </div>
 
+          <div>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="block text-sm font-black text-hobi-muted">実施予定</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-hobi-muted">
+                選択中: {SCHEDULE_LABELS[form.schedule.type]}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(SCHEDULE_LABELS) as HabitSchedule["type"][]).map((type) => {
+                const isSelected = form.schedule.type === type;
+
+                return (
+                  <button
+                    aria-pressed={isSelected}
+                    className={cx(
+                      "flex min-h-[52px] items-center justify-center rounded-2xl border p-2 text-center text-sm font-black transition",
+                      isSelected ? "border-hobi-blue bg-blue-50 text-hobi-blue" : "border-hobi-border bg-white/60 text-hobi-ink"
+                    )}
+                    key={type}
+                    onClick={() => selectSchedule(type)}
+                    type="button"
+                  >
+                    {SCHEDULE_LABELS[type]}
+                  </button>
+                );
+              })}
+            </div>
+            {form.schedule.type === "weekdays" ? (
+              <div className="mt-3">
+                <div className="grid grid-cols-7 gap-1.5">
+                  {WEEKDAY_OPTIONS.map((weekday) => {
+                    const isSelected = form.schedule.type === "weekdays" && form.schedule.weekdays.includes(weekday.value);
+
+                    return (
+                      <button
+                        aria-pressed={isSelected}
+                        className={cx(
+                          "flex aspect-square items-center justify-center rounded-full border text-sm font-black transition",
+                          isSelected
+                            ? "border-hobi-blue bg-hobi-blue text-white"
+                            : "border-hobi-border bg-white/70 text-hobi-muted"
+                        )}
+                        key={weekday.value}
+                        onClick={() => toggleWeekday(weekday.value)}
+                        type="button"
+                      >
+                        {weekday.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {scheduleError ? (
+                  <span className="mt-2 block text-xs font-black text-red-600">{scheduleError}</span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
           {form.recordMethod === "custom" ? (
             <label className="block">
               <span className="mb-2 block text-sm font-black text-hobi-muted">カスタム単位</span>
@@ -1573,8 +1746,9 @@ export function DeleteHabitModal({
   );
 }
 
-function getHeatmapColor(value: number, isInYear: boolean, habit: Habit): string {
+function getHeatmapColor(value: number, isInYear: boolean, isScheduled: boolean, habit: Habit): string {
   if (!isInYear) return "transparent";
+  if (!isScheduled && value <= 0) return "rgba(148, 163, 184, 0.18)";
   if (value <= 0) return "#EEF2F8";
 
   return COLOR_THEME[habit.color].solid;
