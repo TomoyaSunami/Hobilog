@@ -1409,9 +1409,25 @@ export function HabitFormModal({
   onSave: () => void;
   todayKey: string;
 }) {
+  const isOpen = Boolean(form);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [isOpen]);
+
   if (!form) return null;
 
-  const nameError = form.name.trim().length === 0 ? "習慣名を入力してください。" : null;
+  const hasName = form.name.trim().length > 0;
   const customUnitError =
     form.recordMethod === "custom" && form.customUnit.trim().length === 0
       ? "カスタム単位を入力してください。"
@@ -1420,8 +1436,8 @@ export function HabitFormModal({
     form.schedule.type === "weekdays" && form.schedule.weekdays.length === 0
       ? "曜日指定では1つ以上の曜日を選択してください。"
       : null;
-  const formError = nameError ?? customUnitError ?? scheduleError;
-  const canSave = !formError;
+  const formError = customUnitError ?? scheduleError;
+  const canSave = hasName && !formError;
 
   function selectSchedule(type: HabitSchedule["type"]) {
     if (type === "alternateDays") {
@@ -1468,7 +1484,7 @@ export function HabitFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-slate-950/20 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
+    <div className="fixed inset-0 z-50 flex items-end overscroll-none bg-slate-950/20 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
       <div className="glass-card flex max-h-[calc(100dvh-32px)] w-full max-w-[430px] flex-col p-5">
         <div className="mb-5 flex flex-none items-center justify-between">
           <div>
@@ -1480,22 +1496,15 @@ export function HabitFormModal({
           </button>
         </div>
 
-        <div className="-mx-1 min-h-0 flex-1 space-y-4 overflow-y-auto px-1 pb-1">
+        <div className="-mx-1 min-h-0 flex-1 touch-pan-y space-y-4 overflow-y-auto overscroll-contain px-1 pb-1">
           <label className="block">
             <span className="mb-2 block text-sm font-black text-hobi-muted">習慣名</span>
             <input
-              aria-describedby={nameError ? "habit-name-error" : undefined}
-              aria-invalid={Boolean(nameError)}
               className="field"
               onChange={(event) => setForm({ ...form, name: event.target.value })}
               placeholder="例: 読書"
               value={form.name}
             />
-            {nameError ? (
-              <span className="mt-2 block text-xs font-black text-red-600" id="habit-name-error">
-                {nameError}
-              </span>
-            ) : null}
           </label>
 
           <div>
@@ -1673,9 +1682,6 @@ export function HabitFormModal({
           ) : null}
         </div>
 
-        {formError ? (
-          <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-black text-red-600">{formError}</p>
-        ) : null}
         <button
           className="primary-button mt-5 w-full flex-none disabled:opacity-50"
           disabled={!canSave}
