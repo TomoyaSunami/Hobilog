@@ -1081,7 +1081,10 @@ function HabitReorderItem({
 
     const deltaX = Math.abs(event.clientX - pointerStart.current.x);
     const deltaY = Math.abs(event.clientY - pointerStart.current.y);
-    if (deltaX > 8 || deltaY > 8) {
+
+    // A vertical swipe is a scroll gesture, not a reorder gesture. Cancel the
+    // long-press early so the browser can keep handling the native page scroll.
+    if (deltaY > 6 || deltaX > 10) {
       clearLongPress();
     }
   }
@@ -1090,7 +1093,7 @@ function HabitReorderItem({
     <Reorder.Item
       as="article"
       className={cx(
-        "glass-card list-none p-4 cursor-grab touch-none select-none active:cursor-grabbing",
+        "glass-card list-none p-4 cursor-grab touch-pan-y select-none active:cursor-grabbing",
         isHolding && "border-blue-200 bg-blue-50/40"
       )}
       dragControls={dragControls}
