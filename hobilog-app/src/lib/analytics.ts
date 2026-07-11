@@ -41,7 +41,7 @@ function getHabitStartKey(habit: Habit, records: HabitRecord[], todayKey: string
     }, null);
 
   const candidates = [createdDate, oldestDoneDate, habit.schedule.type === "alternateDays" ? habit.schedule.anchorDate : null]
-    .filter((dateKey): dateKey is string => Boolean(dateKey) && dateKey <= todayKey)
+    .filter((dateKey): dateKey is string => typeof dateKey === "string" && dateKey <= todayKey)
     .sort();
 
   return candidates[0] ?? todayKey;

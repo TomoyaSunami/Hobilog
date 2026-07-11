@@ -1426,6 +1426,7 @@ export function HabitFormModal({
   }, [isOpen]);
 
   if (!form) return null;
+  const currentForm = form;
 
   const hasName = form.name.trim().length > 0;
   const customUnitError =
@@ -1442,10 +1443,10 @@ export function HabitFormModal({
   function selectSchedule(type: HabitSchedule["type"]) {
     if (type === "alternateDays") {
       setForm({
-        ...form,
+        ...currentForm,
         schedule:
-          form.schedule.type === "alternateDays"
-            ? form.schedule
+          currentForm.schedule.type === "alternateDays"
+            ? currentForm.schedule
             : { type: "alternateDays", anchorDate: todayKey }
       });
       return;
@@ -1453,10 +1454,10 @@ export function HabitFormModal({
 
     if (type === "weekdays") {
       setForm({
-        ...form,
+        ...currentForm,
         schedule:
-          form.schedule.type === "weekdays"
-            ? form.schedule
+          currentForm.schedule.type === "weekdays"
+            ? currentForm.schedule
             : {
                 type: "weekdays",
                 weekdays: []
@@ -1465,17 +1466,17 @@ export function HabitFormModal({
       return;
     }
 
-    setForm({ ...form, schedule: { type: "daily" } });
+    setForm({ ...currentForm, schedule: { type: "daily" } });
   }
 
   function toggleWeekday(weekday: Weekday) {
-    if (form.schedule.type !== "weekdays") return;
+    if (currentForm.schedule.type !== "weekdays") return;
 
-    const selected = form.schedule.weekdays.includes(weekday)
-      ? form.schedule.weekdays.filter((item) => item !== weekday)
-      : [...form.schedule.weekdays, weekday];
+    const selected = currentForm.schedule.weekdays.includes(weekday)
+      ? currentForm.schedule.weekdays.filter((item) => item !== weekday)
+      : [...currentForm.schedule.weekdays, weekday];
     setForm({
-      ...form,
+      ...currentForm,
       schedule: {
         type: "weekdays",
         weekdays: selected.sort((a, b) => a - b)
